@@ -9,6 +9,9 @@ ai_tasks/completed/*
 ai_tasks/rejected/*
 !ai_tasks/*/.gitkeep
 logs/*.jsonl
+parser_tasks/pending/*
+parser_tasks/completed/*
+parser_profiles/*.json
 ui/runtime/uploads/*
 ui/runtime/reports/*
 !ui/runtime/uploads/.gitkeep

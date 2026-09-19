@@ -16,9 +16,13 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from ai_bridge.client import OfflineAIBridge
+from ai_bridge.parser_learning import ParserLearningBridge
 from core.models import PipelineResult, ReviewStatus
+from core.parser_config import ParserProfile
 from exporters.excel_report import PersianExcelReport
+from parsers.errors import UnsupportedFormatError
 from parsers.excel_parser import ExcelParser
+from parsers.profile_store import ParserProfileStore
 
 ROOT = Path(__file__).resolve().parents[1]
 UI_ROOT = Path(__file__).resolve().parent
@@ -52,7 +56,12 @@ async def optional_basic_auth(request: Request, call_next: Any) -> Response:
     if not authenticated:
         return Response(status_code=401, headers={"WWW-Authenticate": 'Basic realm="Agha Accounting"'})
     return await call_next(request)
-state: dict[str, Any] = {"result": None, "input": None, "report": None, "display_name": None}
+state: dict[str, Any] = {
+    "result": None, "input": None, "report": None, "display_name": None,
+    "active_profile": None, "parser_task": None,
+}
+profile_store = ParserProfileStore(DATA_ROOT)
+parser_learning = ParserLearningBridge(ROOT, DATA_ROOT)
 
 
 class AIAnswer(BaseModel):
@@ -93,6 +102,8 @@ def _serialize(result: PipelineResult) -> dict[str, Any]:
              "document": item.document_number, "row": item.row_number}
             for item in result.warnings
         ],
+        "parser_profiles": profile_store.summary(),
+        "active_profile": state.get("active_profile"),
         "recent_lines": [
             {"document": line.document_number, "date": line.jalali_date, "description": line.description,
              "account": line.account_name or "در انتظار تشخیص", "debit": float(line.debit),
@@ -102,8 +113,10 @@ def _serialize(result: PipelineResult) -> dict[str, Any]:
     }
 
 
-def _process(path: Path, display_name: str | None = None) -> dict[str, Any]:
-    parser = ExcelParser()
+def _process(path: Path, display_name: str | None = None,
+             forced_profile: ParserProfile | None = None) -> dict[str, Any]:
+    profile = forced_profile or profile_store.find_match(path)
+    parser = ExcelParser(profile=profile)
     result = parser.parse(path)
     if display_name:
         result.source_file = display_name
@@ -112,7 +125,10 @@ def _process(path: Path, display_name: str | None = None) -> dict[str, Any]:
     bridge.create_tasks(result)
     report = REPORTS / "گزارش_آقا.xlsx"
     PersianExcelReport(ROOT).export(result, report)
-    state.update(result=result, input=path, report=report, display_name=display_name or path.name)
+    state.update(
+        result=result, input=path, report=report, display_name=display_name or path.name,
+        active_profile=profile.profile_name if profile else "Parser استاندارد آقا", parser_task=None,
+    )
     return _serialize(result)
 
 
@@ -154,9 +170,49 @@ def process_file(file: UploadFile = File(...)) -> dict[str, Any]:
             shutil.copyfileobj(file.file, handle)
         try:
             return _process(destination, file.filename or destination.name)
+        except UnsupportedFormatError as exc:
+            task = parser_learning.create_task(destination, exc.reason)
+            state.update(input=destination, display_name=file.filename or destination.name, parser_task=task)
+            return {
+                "needs_parser": True,
+                "message": "قالب فایل برای آقا ناشناخته است؛ مأموریت ساخت Parser آماده شد.",
+                "parser_task": task,
+                "parser_profiles": profile_store.summary(),
+            }
         except Exception as exc:
             destination.unlink(missing_ok=True)
             raise HTTPException(422, f"پردازش فایل ممکن نشد: {exc}") from exc
+
+
+@app.get("/api/parser-profiles")
+def parser_profiles() -> dict[str, Any]:
+    return {"profiles": profile_store.summary()}
+
+
+@app.get("/api/parser-tasks/{task_id}/prompt")
+def download_parser_prompt(task_id: str) -> FileResponse:
+    if not task_id.startswith("PARSER-") or not task_id.replace("PARSER-", "").isalnum():
+        raise HTTPException(400, "شناسه مأموریت Parser نامعتبر است")
+    path = DATA_ROOT / "parser_tasks" / "pending" / f"{task_id}.prompt.md"
+    if not path.exists():
+        raise HTTPException(404, "پرامپت ساخت Parser پیدا نشد")
+    return FileResponse(path, filename=f"{task_id}.prompt.md", media_type="text/markdown; charset=utf-8")
+
+
+@app.post("/api/parser-tasks/{task_id}/config")
+def submit_parser_config(task_id: str, payload: AIAnswer) -> dict[str, Any]:
+    with lock:
+        source = state.get("input")
+        if not isinstance(source, Path) or not source.exists():
+            raise HTTPException(409, "فایل منبع این مأموریت دیگر در دسترس نیست")
+        try:
+            profile = parser_learning.accept_config(task_id, payload.answer, source, persist=False)
+            result = _process(source, state.get("display_name"), forced_profile=profile)
+            parser_learning.complete_config(task_id, payload.answer, profile, source.name)
+            result["parser_profiles"] = profile_store.summary()
+            return result
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
 
 
 @app.get("/api/report")
