@@ -22,6 +22,7 @@ from core.decision_memory import DecisionMemory
 from core.human_task_store import HumanTaskStore
 from core.models import PipelineResult, ReviewStatus
 from core.parser_config import ParserProfile
+from core.setup import CompanySetupRequest, SetupStore, chart_for
 from exporters.excel_report import PersianExcelReport
 from parsers.errors import UnsupportedFormatError
 from parsers.excel_parser import ExcelParser
@@ -68,6 +69,7 @@ parser_learning = ParserLearningBridge(ROOT, DATA_ROOT)
 human_tasks = HumanTaskStore(DATA_ROOT)
 decision_memory = DecisionMemory(DATA_ROOT)
 recovery_engine = RecoveryEngine(ROOT, DATA_ROOT, human_tasks)
+setup_store = SetupStore(DATA_ROOT)
 
 
 class AIAnswer(BaseModel):
@@ -76,6 +78,10 @@ class AIAnswer(BaseModel):
 
 class CopilotCommand(BaseModel):
     command: str = Field(min_length=3, max_length=2000)
+
+
+class ResetRequest(BaseModel):
+    confirmation: str
 
 
 def _serialize(result: PipelineResult) -> dict[str, Any]:
@@ -154,9 +160,9 @@ def _ensure_state() -> PipelineResult:
     result = state.get("result")
     if isinstance(result, PipelineResult):
         return result
-    sample = ROOT / "examples" / "sample_input.xlsx"
-    _process(sample)
-    return state["result"]
+    empty = PipelineResult(source_file="هنوز فایلی وارد نشده است")
+    state.update(result=empty, input=None, report=None, display_name=None)
+    return empty
 
 
 def _resume_or_recover(path: Path, display_name: str | None = None) -> dict[str, Any]:
@@ -229,11 +235,80 @@ def index() -> HTMLResponse:
 @app.get("/api/status")
 def status() -> dict[str, Any]:
     with lock:
-        return _serialize(_ensure_state())
+        if not setup_store.is_initialized():
+            return {
+                "setup_required": True,
+                "chart_templates": [
+                    {"id": name, "account_count": len(chart_for(name))}
+                    for name in ("service", "trading", "general")
+                ],
+            }
+        data = _serialize(_ensure_state())
+        profile = setup_store.profile()
+        data["setup_required"] = False
+        data["company"] = profile.model_dump(mode="json") if profile else None
+        data["chart_account_count"] = len(setup_store.accounts())
+        return data
+
+
+@app.post("/api/setup/initialize")
+def initialize_system(payload: CompanySetupRequest) -> dict[str, Any]:
+    with lock:
+        try:
+            profile = setup_store.initialize(payload)
+            state.update(result=None, input=None, report=None, display_name=None,
+                         active_profile=None, parser_task=None)
+            return {
+                "initialized": True,
+                "company": profile.model_dump(mode="json"),
+                "account_count": len(setup_store.accounts()),
+            }
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+
+
+@app.get("/api/setup/chart-of-accounts")
+def chart_of_accounts() -> dict[str, Any]:
+    if not setup_store.is_initialized():
+        raise HTTPException(409, "ابتدا راه‌اندازی اولیه را تکمیل کنید")
+    return {"accounts": [item.model_dump(mode="json") for item in setup_store.accounts()]}
+
+
+@app.post("/api/setup/reset")
+def reset_system(payload: ResetRequest) -> dict[str, bool]:
+    if payload.confirmation != "شروع از صفر":
+        raise HTTPException(400, "عبارت تأیید بازنشانی صحیح نیست")
+    with lock:
+        setup_store.reset()
+        for name in ("ai_tasks", "parser_tasks", "parser_profiles", "human_tasks", "learning",
+                     "recovery_tasks", "logs", "ui-runtime"):
+            folder = DATA_ROOT / name
+            if not folder.exists():
+                continue
+            for child in folder.iterdir():
+                if child.name == ".gitkeep":
+                    continue
+                if child.is_dir():
+                    shutil.rmtree(child, ignore_errors=True)
+                else:
+                    child.unlink(missing_ok=True)
+        # Recreate directories expected by long-lived store instances.
+        for directory in (
+            human_tasks.pending_dir, human_tasks.resolved_dir, human_tasks.audit_path.parent,
+            recovery_engine.pending, recovery_engine.completed, recovery_engine.audit_path.parent,
+            parser_learning.pending, parser_learning.completed, parser_learning.audit_path.parent,
+            decision_memory.path.parent, profile_store.directory, UPLOADS, REPORTS,
+        ):
+            directory.mkdir(parents=True, exist_ok=True)
+        state.update(result=None, input=None, report=None, display_name=None,
+                     active_profile=None, parser_task=None)
+    return {"reset": True}
 
 
 @app.post("/api/process")
 def process_file(file: UploadFile = File(...)) -> dict[str, Any]:
+    if not setup_store.is_initialized():
+        raise HTTPException(409, "ابتدا شرکت، سال مالی و کدینگ حساب‌ها را راه‌اندازی کنید")
     suffix = Path(file.filename or "").suffix.lower()
     if suffix not in {".xlsx", ".xls", ".csv"}:
         raise HTTPException(400, "فقط فایل Excel یا CSV قابل پردازش است.")
@@ -384,7 +459,9 @@ def create_report_activation_task(report_id: str) -> dict[str, Any]:
 def download_report() -> FileResponse:
     with lock:
         _ensure_state()
-        report: Path = state["report"]
+        report = state.get("report")
+        if not isinstance(report, Path) or not report.exists():
+            raise HTTPException(409, "هنوز گزارشی ساخته نشده است؛ ابتدا اطلاعات حسابداری وارد کنید")
     return FileResponse(report, filename="Agha-Accounting-Report.xlsx",
                         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 

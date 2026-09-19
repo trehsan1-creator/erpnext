@@ -3,14 +3,28 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#17213a"><title>آقا | حسابداری هوشمند</title>
-  <link rel="stylesheet" href="/static/app.css?v=10">
+  <link rel="stylesheet" href="/static/app.css?v=11">
 </head>
 <body>
 <div id="toast" class="toast" role="status"></div>
 
+<section id="setupScreen" class="setup-screen hidden">
+  <div class="setup-shell">
+    <aside class="setup-aside"><div class="setup-brand"><div>آ</div><b>راه‌اندازی آقا</b></div><h1>حسابداری را درست و از پایه شروع کنید</h1><p>اطلاعات شرکت، سال مالی و کدینگ استاندارد در این مرحله ساخته می‌شوند.</p><ol><li class="active"><i>۱</i><div><b>مشخصات شرکت</b><span>اطلاعات هویتی و نوع فعالیت</span></div></li><li><i>۲</i><div><b>سال مالی</b><span>بازه ثبت و گزارش‌گیری</span></div></li><li><i>۳</i><div><b>کدینگ حساب‌ها</b><span>الگوی استاندارد متناسب با شرکت</span></div></li></ol><div class="setup-security">✓ داده‌ها محلی و تحت کنترل شما هستند</div></aside>
+    <main class="setup-main"><div class="setup-heading"><span>راه‌اندازی اولیه</span><h2>اطلاعات پایه شرکت</h2><p>بعداً می‌توانید جزئیات بیشتری در تنظیمات شرکت تکمیل کنید.</p></div>
+      <form id="setupForm" class="setup-form">
+        <div class="form-section"><h3>مشخصات حقوقی</h3><div class="form-grid"><label><span>نام قانونی شرکت *</span><input name="legal_name" required placeholder="مثلاً شرکت نمونه ایرانیان"></label><label><span>نام تجاری</span><input name="economic_name" placeholder="نام مورد استفاده در گزارش‌ها"></label><label><span>شناسه ملی</span><input name="national_id" inputmode="numeric" placeholder="۱۱ رقم"></label><label><span>شماره ثبت</span><input name="registration_number" placeholder="شماره ثبت شرکت"></label><label><span>نوع فعالیت *</span><select name="activity_type" required><option value="">انتخاب کنید</option><option value="service">خدماتی</option><option value="trading">بازرگانی</option><option value="general">عمومی / ترکیبی</option></select></label><label><span>واحد پول پایه</span><select name="base_currency"><option value="IRR">ریال ایران</option><option value="IRT">تومان ایران</option></select></label></div></div>
+        <div class="form-section"><h3>سال مالی</h3><div class="form-grid three"><label><span>عنوان سال مالی *</span><input name="fiscal_year_title" required value="سال مالی ۱۴۰۳"></label><label><span>تاریخ شروع شمسی *</span><input name="fiscal_year_start" required value="1403/01/01" dir="ltr"></label><label><span>تاریخ پایان شمسی *</span><input name="fiscal_year_end" required value="1403/12/29" dir="ltr"></label></div></div>
+        <div class="form-section"><h3>الگوی کدینگ حسابداری</h3><div class="chart-options"><label><input type="radio" name="chart_template" value="service" required><div><b>شرکت خدماتی</b><span>درآمد خدمات، هزینه مستقیم و حساب‌های عمومی</span><em data-template-count="service">— حساب</em></div></label><label><input type="radio" name="chart_template" value="trading"><div><b>شرکت بازرگانی</b><span>فروش کالا، موجودی و بهای تمام‌شده</span><em data-template-count="trading">— حساب</em></div></label><label><input type="radio" name="chart_template" value="general"><div><b>کدینگ جامع</b><span>مناسب فعالیت ترکیبی و توسعه آینده</span><em data-template-count="general">— حساب</em></div></label></div><p class="form-hint">گروه، کل و معین‌های استاندارد ساخته می‌شوند و بعداً قابل ویرایش‌اند.</p></div>
+        <div class="setup-submit"><div><b>آماده شروع هستید؟</b><span>بعد از تأیید، داشبورد خالی و کدینگ پایه ساخته می‌شود.</span></div><button type="submit" class="primary-button">ساخت شرکت و شروع کار ←</button></div>
+      </form>
+    </main>
+  </div>
+</section>
+
 <aside class="sidebar">
   <div class="brand"><div class="brand-mark">آ</div><div><strong>آقا</strong><span>حسابداری هوشمند</span></div></div>
-  <div class="workspace-switcher"><span>فضای کاری جاری</span><button type="button"><i>مح</i><div><b>پردازش محلی</b><small>بدون اتصال مستقیم به AI</small></div><em>⌄</em></button></div>
+  <div class="workspace-switcher"><span>شرکت فعال</span><button type="button"><i>ش</i><div><b id="workspaceName">—</b><small id="workspaceFiscal">—</small></div><em>⌄</em></button></div>
   <nav aria-label="منوی اصلی">
     <p>مدیریت</p>
     <button class="nav active" data-page="dashboard"><i>▦</i><span>داشبورد شرکت</span></button>
@@ -163,7 +177,8 @@
     <!-- Settings -->
     <section class="app-page" data-page-panel="settings">
       <div class="page-intro"><div><h2>تنظیمات و حافظه سیستم</h2><p>وضعیت یادگیری کنترل‌شده آقا و تنظیمات پردازش</p></div></div>
-      <div class="settings-grid"><section class="card settings-card"><h3>حافظه Parser</h3><p>قالب‌های Excel و CSV که قبلاً به آقا آموزش داده شده‌اند.</p><strong><b id="settingsProfileCount">—</b> قالب ذخیره‌شده</strong></section><section class="card settings-card"><h3>حافظه تصمیم</h3><p>قواعدی که بعد از تأییدهای انسانی بدون تعارض فعال شده‌اند.</p><strong><b id="settingsRuleCount">—</b> قاعده فعال</strong></section><section class="card settings-card"><h3>حالت اتصال AI</h3><p>پرامپت‌ها دستی کپی می‌شوند و اتصال مستقیم وجود ندارد.</p><strong class="safe">آفلاین و تحت کنترل</strong></section><section class="card settings-card"><h3>ثبت حسابرسی</h3><p>ورودی، پاسخ، تصمیم و زمان تمام عملیات هوشمند ثبت می‌شود.</p><strong class="safe">فعال</strong></section></div>
+      <div class="settings-grid"><section class="card settings-card"><h3>کدینگ حسابداری</h3><p>گروه، کل و معین‌های ساخته‌شده برای شرکت فعال.</p><strong><b id="settingsAccountCount">—</b> حساب فعال</strong></section><section class="card settings-card"><h3>حافظه Parser</h3><p>قالب‌های Excel و CSV که قبلاً به آقا آموزش داده شده‌اند.</p><strong><b id="settingsProfileCount">—</b> قالب ذخیره‌شده</strong></section><section class="card settings-card"><h3>حافظه تصمیم</h3><p>قواعدی که بعد از تأییدهای انسانی بدون تعارض فعال شده‌اند.</p><strong><b id="settingsRuleCount">—</b> قاعده فعال</strong></section><section class="card settings-card"><h3>حالت اتصال AI</h3><p>پرامپت‌ها دستی کپی می‌شوند و اتصال مستقیم وجود ندارد.</p><strong class="safe">آفلاین و تحت کنترل</strong></section></div>
+      <section class="danger-zone"><div><h3>شروع مجدد از صفر</h3><p>شرکت، کدینگ، حافظه تصمیم، Parserها، مأموریت‌ها و داده‌های runtime حذف می‌شوند.</p></div><button id="resetSystem" type="button">پاک‌کردن تمام داده‌ها</button></section>
     </section>
 
     <footer><span>آقا — حسابداری هوشمند</span><p>خروجی ابزار کمکی است و ثبت نهایی با تأیید مسئول مالی انجام می‌شود.</p><b>نسخه آزمایشی ۰.۳</b></footer>
@@ -174,5 +189,5 @@
 <div id="humanDialog" class="modal-overlay hidden"><section class="modal-card"><button type="button" id="closeHuman" class="dialog-close">×</button><span class="dialog-label green">درخواست بررسی حسابدار</span><h3 id="humanDialogTitle">تکمیل اطلاعات</h3><p id="humanInstructions"></p><div id="humanContext" class="human-context"></div><form id="humanForm" class="human-form"></form><div class="dialog-actions"><button type="button" id="cancelHuman" class="ghost">بعداً</button><button type="button" id="submitHuman" class="primary">ثبت و ادامه</button></div></section></div>
 <div id="promptDialog" class="modal-overlay hidden"><section class="modal-card prompt-modal"><button type="button" id="closePrompt" class="dialog-close">×</button><span class="dialog-label">پرامپت آماده</span><h3 id="promptTitle">پرامپت مأموریت</h3><p>متن را کپی و به AI دلخواه بدهید.</p><textarea id="promptText" class="prompt-text" readonly></textarea><div class="prompt-meta"><span>کل متن داخل کادر کپی می‌شود</span><b id="promptChars">۰ کاراکتر</b></div><div class="dialog-actions"><button type="button" id="cancelPrompt" class="ghost">بستن</button><button type="button" id="copyPrompt" class="primary"><span>□</span> کپی کامل</button></div></section></div>
 <div id="loader" class="loader hidden"><div class="spinner"></div><strong>در حال پردازش</strong><small id="loaderText">لطفاً صبر کنید…</small></div>
-<script src="/static/app.js?v=10"></script>
+<script src="/static/app.js?v=11"></script>
 </body></html>
