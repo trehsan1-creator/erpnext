@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>آقا — عامل حسابداری</title>
-  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/app.css?v=3">
 </head>
 <body>
   <div class="noise"></div><div class="orb orb-one"></div><div class="orb orb-two"></div>
@@ -72,8 +72,8 @@
   </main>
 
   <dialog id="answerDialog"><form method="dialog"><button class="dialog-close">×</button><span class="badge">ورود پاسخ مأموریت</span><h3 id="dialogTitle">پاسخ JSON</h3><p>خروجی خام هوش مصنوعی را بدون Markdown اینجا بچسبان.</p><textarea id="answerJson" spellcheck="false" placeholder='{"task_id": "TX-...", ...}'></textarea><div class="dialog-actions"><button value="cancel" class="ghost">انصراف</button><button type="button" id="submitAnswer" class="primary">اعتبارسنجی و ادامه عملیات</button></div></form></dialog>
-  <dialog id="promptDialog" class="prompt-dialog"><form method="dialog"><button class="dialog-close">×</button><span class="badge">پرامپت آماده ارسال</span><h3 id="promptTitle">پرامپت مأموریت</h3><p>کل متن زیر را کپی کن و به Claude، ChatGPT یا مدل دلخواهت بده.</p><textarea id="promptText" class="prompt-text" readonly spellcheck="false"></textarea><div class="prompt-meta"><span>فقط متن نمایش‌داده‌شده کپی می‌شود</span><b id="promptChars">۰ کاراکتر</b></div><div class="dialog-actions"><button value="cancel" class="ghost">بستن</button><button type="button" id="copyPrompt" class="primary copy-prompt"><span>□</span> کپی کامل پرامپت</button></div></form></dialog>
+  <div id="promptDialog" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="promptTitle"><section class="prompt-dialog"><button type="button" id="closePrompt" class="dialog-close">×</button><span class="badge">پرامپت آماده ارسال</span><h3 id="promptTitle">پرامپت مأموریت</h3><p>کل متن زیر را کپی کن و به Claude، ChatGPT یا مدل دلخواهت بده.</p><textarea id="promptText" class="prompt-text" readonly spellcheck="false"></textarea><div class="prompt-meta"><span>فقط متن نمایش‌داده‌شده کپی می‌شود</span><b id="promptChars">۰ کاراکتر</b></div><div class="dialog-actions"><button type="button" id="cancelPrompt" class="ghost">بستن</button><button type="button" id="copyPrompt" class="primary copy-prompt"><span>□</span> کپی کامل پرامپت</button></div></section></div>
   <div id="loader" class="loader hidden"><div class="loader-core">آ</div><div class="loader-ring"></div><strong>آقا مشغول حساب‌وکتاب است…</strong><small id="loaderText">در حال خواندن ساختار فایل</small></div>
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v=3"></script>
 </body>
 </html>
