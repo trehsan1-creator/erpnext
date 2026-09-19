@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>آقا — عامل حسابداری</title>
-  <link rel="stylesheet" href="/static/app.css?v=3">
+  <link rel="stylesheet" href="/static/app.css?v=4">
 </head>
 <body>
   <div class="noise"></div><div class="orb orb-one"></div><div class="orb orb-two"></div>
@@ -14,6 +14,7 @@
       <button class="nav active"><i>◈</i><span>اتاق فرمان</span></button>
       <button class="nav" data-scroll="ledger"><i>⌁</i><span>دفتر عملیات</span></button>
       <button class="nav" data-scroll="missions"><i>✦</i><span>مأموریت‌های هوشمند</span><b id="navPending">۰</b></button>
+      <button class="nav" data-scroll="humanWork"><i>◎</i><span>کارتابل انسانی</span><b id="navHuman">۰</b></button>
       <button class="nav" data-scroll="warnings"><i>△</i><span>کنترل و هشدار</span></button>
     </nav>
     <div class="privacy"><span class="pulse"></span><div><b>حالت آفلاین امن</b><small>هیچ داده‌ای خودکار خارج نمی‌شود</small></div></div>
@@ -63,17 +64,23 @@
       <div id="taskList" class="task-list"><div class="empty">فعلاً مأموریتی باز نیست.</div></div>
     </section>
 
-    <section class="panel wide" id="ledger"><div class="panel-head"><div><span class="section-number">۰۴</span><h3>آخرین عملیات دفتر</h3></div><a href="/api/report" class="text-link">دریافت خروجی حرفه‌ای Excel ←</a></div>
+    <section class="panel wide human-work" id="humanWork"><div class="panel-head"><div><span class="section-number">۰۴</span><h3>کارتابل همکاری انسان و آقا</h3><p>فقط کاری که واقعاً به قضاوت یا اطلاعات انسان نیاز دارد؛ دقیق، مرحله‌ای و قابل یادگیری.</p></div><span class="human-count"><b id="humanCount">۰</b> کار باز</span></div>
+      <div class="autonomy-bar"><div><span>نرخ انجام خودکار</span><b id="automationRate">۰٪</b></div><div class="bar"><i id="automationFill"></i></div><small><b id="learnedRules">۰</b> قاعده از تصمیم‌های تأییدشده یاد گرفته شده</small></div>
+      <div id="humanTaskList" class="human-task-list"><div class="empty">فعلاً کاری برای انسان وجود ندارد.</div></div>
+    </section>
+
+    <section class="panel wide" id="ledger"><div class="panel-head"><div><span class="section-number">۰۵</span><h3>آخرین عملیات دفتر</h3></div><a href="/api/report" class="text-link">دریافت خروجی حرفه‌ای Excel ←</a></div>
       <div class="table-wrap"><table><thead><tr><th>سند</th><th>تاریخ</th><th>شرح</th><th>حساب تشخیص‌داده‌شده</th><th>بدهکار</th><th>بستانکار</th><th>وضعیت</th></tr></thead><tbody id="ledgerRows"></tbody></table></div>
     </section>
 
-    <section class="panel wide" id="warnings"><div class="panel-head"><div><span class="section-number">۰۵</span><h3>کنترل و هشدار</h3></div></div><div id="warningList" class="warning-list"></div></section>
+    <section class="panel wide" id="warnings"><div class="panel-head"><div><span class="section-number">۰۶</span><h3>کنترل و هشدار</h3></div></div><div id="warningList" class="warning-list"></div></section>
     <footer><div class="brand-mini">آقا</div><p>ابزار تصمیم‌یار حسابداری؛ تصمیم نهایی با حسابدار مسئول است.</p><span>OFFLINE BY DESIGN</span></footer>
   </main>
 
   <dialog id="answerDialog"><form method="dialog"><button class="dialog-close">×</button><span class="badge">ورود پاسخ مأموریت</span><h3 id="dialogTitle">پاسخ JSON</h3><p>خروجی خام هوش مصنوعی را بدون Markdown اینجا بچسبان.</p><textarea id="answerJson" spellcheck="false" placeholder='{"task_id": "TX-...", ...}'></textarea><div class="dialog-actions"><button value="cancel" class="ghost">انصراف</button><button type="button" id="submitAnswer" class="primary">اعتبارسنجی و ادامه عملیات</button></div></form></dialog>
+  <div id="humanDialog" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="humanDialogTitle"><section class="prompt-dialog human-dialog"><button type="button" id="closeHuman" class="dialog-close">×</button><span class="badge human-badge">درخواست همکاری انسان</span><h3 id="humanDialogTitle">تکمیل اطلاعات</h3><p id="humanInstructions"></p><div id="humanContext" class="human-context"></div><form id="humanForm" class="human-form"></form><div class="dialog-actions"><button type="button" id="cancelHuman" class="ghost">فعلاً نه</button><button type="button" id="submitHuman" class="primary">ثبت پاسخ و ادامه کار</button></div></section></div>
   <div id="promptDialog" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="promptTitle"><section class="prompt-dialog"><button type="button" id="closePrompt" class="dialog-close">×</button><span class="badge">پرامپت آماده ارسال</span><h3 id="promptTitle">پرامپت مأموریت</h3><p>کل متن زیر را کپی کن و به Claude، ChatGPT یا مدل دلخواهت بده.</p><textarea id="promptText" class="prompt-text" readonly spellcheck="false"></textarea><div class="prompt-meta"><span>فقط متن نمایش‌داده‌شده کپی می‌شود</span><b id="promptChars">۰ کاراکتر</b></div><div class="dialog-actions"><button type="button" id="cancelPrompt" class="ghost">بستن</button><button type="button" id="copyPrompt" class="primary copy-prompt"><span>□</span> کپی کامل پرامپت</button></div></section></div>
   <div id="loader" class="loader hidden"><div class="loader-core">آ</div><div class="loader-ring"></div><strong>آقا مشغول حساب‌وکتاب است…</strong><small id="loaderText">در حال خواندن ساختار فایل</small></div>
-  <script src="/static/app.js?v=3"></script>
+  <script src="/static/app.js?v=4"></script>
 </body>
 </html>

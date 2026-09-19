@@ -31,5 +31,10 @@ def test_end_to_end_offline_handoff(tmp_path: Path) -> None:
     (tmp_path / "ai_tasks" / "pending" / f"{task_id}.response.json").write_text(json.dumps(response, ensure_ascii=False), encoding="utf-8")
     bridge.apply_responses(result)
     assert result.lines[0].status == ReviewStatus.RESOLVED
+    # Accepted AI decisions survive future reruns and are not requested again.
+    rerun = parser.parse(source)
+    bridge.apply_responses(rerun)
+    assert rerun.lines[0].status == ReviewStatus.RESOLVED
+    assert rerun.lines[0].account_code == "610101"
     report = PersianExcelReport(Path(__file__).parents[1]).export(result, tmp_path / "report.xlsx")
     assert report.exists()

@@ -70,6 +70,20 @@ class OfflineAIBridge:
 
     def apply_responses(self, result: PipelineResult) -> None:
         line_map = {f"TX-{line.line_id}": line for line in result.lines}
+        # Accepted decisions are durable and are reapplied on every run.
+        for task_path in sorted((self.tasks_dir / "completed").glob("*.task.json")):
+            try:
+                task = json.loads(task_path.read_text(encoding="utf-8"))
+                line = line_map.get(task["task_id"])
+                response_path = task_path.with_name(task["response_file"])
+                if line is None or not response_path.exists():
+                    continue
+                model_class = AI_RESPONSE_SCHEMAS[task["task_type"]]
+                answer = model_class.model_validate_json(response_path.read_text(encoding="utf-8"))
+                if isinstance(answer, AmbiguousTransactionResponse):
+                    self._apply_transaction(line, answer)
+            except (KeyError, OSError, ValidationError, ValueError):
+                continue
         for task_path in sorted((self.tasks_dir / "pending").glob("*.task.json")):
             task = json.loads(task_path.read_text(encoding="utf-8"))
             task_id = task["task_id"]

@@ -17,6 +17,8 @@ from pydantic import BaseModel
 
 from ai_bridge.client import OfflineAIBridge
 from ai_bridge.parser_learning import ParserLearningBridge
+from core.decision_memory import DecisionMemory
+from core.human_task_store import HumanTaskStore
 from core.models import PipelineResult, ReviewStatus
 from core.parser_config import ParserProfile
 from exporters.excel_report import PersianExcelReport
@@ -62,6 +64,8 @@ state: dict[str, Any] = {
 }
 profile_store = ParserProfileStore(DATA_ROOT)
 parser_learning = ParserLearningBridge(ROOT, DATA_ROOT)
+human_tasks = HumanTaskStore(DATA_ROOT)
+decision_memory = DecisionMemory(DATA_ROOT)
 
 
 class AIAnswer(BaseModel):
@@ -86,6 +90,10 @@ def _serialize(result: PipelineResult) -> dict[str, Any]:
         "pending": len(pending),
         "review": len(review),
         "resolved": sum(line.status == ReviewStatus.RESOLVED for line in lines),
+        "automation_rate": round(100 * sum(line.status == ReviewStatus.RESOLVED for line in lines) / len(lines), 1) if lines else 100,
+        "human_tasks": [task.model_dump(mode="json") for task in human_tasks.pending()],
+        "human_task_stats": human_tasks.stats(),
+        "learning_stats": decision_memory.stats(),
         "tasks": [
             {
                 "task_id": f"TX-{line.line_id}",
@@ -120,9 +128,12 @@ def _process(path: Path, display_name: str | None = None,
     result = parser.parse(path)
     if display_name:
         result.source_file = display_name
+    decision_memory.apply(result)
     bridge = OfflineAIBridge(ROOT, parser.accounts, data_root=DATA_ROOT)
     bridge.apply_responses(result)
     bridge.create_tasks(result)
+    human_tasks.apply_resolutions(result)
+    human_tasks.create_for_result(result, parser.accounts)
     report = REPORTS / "گزارش_آقا.xlsx"
     PersianExcelReport(ROOT).export(result, report)
     state.update(
@@ -211,6 +222,28 @@ def submit_parser_config(task_id: str, payload: AIAnswer) -> dict[str, Any]:
             parser_learning.complete_config(task_id, payload.answer, profile, source.name)
             result["parser_profiles"] = profile_store.summary()
             return result
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+
+
+@app.post("/api/human-tasks/{task_id}/resolve")
+def resolve_human_task(task_id: str, payload: AIAnswer) -> dict[str, Any]:
+    if not task_id.startswith("HUMAN-") or any(character not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" for character in task_id):
+        raise HTTPException(400, "شناسه کار انسانی نامعتبر است")
+    with lock:
+        try:
+            task = human_tasks.resolve(task_id, payload.answer)
+            if task.task_type == "transaction_review":
+                code = str(task.answers.get("account_code", ""))
+                description = str(task.context.get("description", ""))
+                option = next((option for field in task.fields if field.key == "account_code"
+                               for option in field.options if option.value == code), None)
+                if code and description and option:
+                    decision_memory.record(description, code, option.label.split(" — ", 1)[-1])
+            source = state.get("input")
+            if not isinstance(source, Path) or not source.exists():
+                raise HTTPException(409, "فایل منبع برای ادامه عملیات در دسترس نیست")
+            return _process(source, state.get("display_name"))
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
 

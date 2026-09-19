@@ -12,6 +12,9 @@ logs/*.jsonl
 parser_tasks/pending/*
 parser_tasks/completed/*
 parser_profiles/*.json
+human_tasks/pending/*
+human_tasks/resolved/*
+learning/*.json
 ui/runtime/uploads/*
 ui/runtime/reports/*
 !ui/runtime/uploads/.gitkeep
