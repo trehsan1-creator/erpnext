@@ -1,147 +1,120 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#17213a">
-  <title>آقا | سامانه هوشمند حسابداری</title>
-  <link rel="stylesheet" href="/static/app.css?v=8">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#17213a"><title>آقا | حسابداری هوشمند</title>
+  <link rel="stylesheet" href="/static/app.css?v=9">
 </head>
 <body>
-  <div id="toast" class="toast" role="status"></div>
+<div id="toast" class="toast" role="status"></div>
 
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-mark">آ</div>
-      <div><strong>آقا</strong><span>سامانه هوشمند حسابداری</span></div>
-    </div>
+<aside class="sidebar">
+  <div class="brand"><div class="brand-mark">آ</div><div><strong>آقا</strong><span>حسابداری هوشمند</span></div></div>
+  <div class="workspace-switcher"><span>فضای کاری جاری</span><button type="button"><i>مح</i><div><b>پردازش محلی</b><small>بدون اتصال مستقیم به AI</small></div><em>⌄</em></button></div>
+  <nav aria-label="منوی اصلی">
+    <p>منوی اصلی</p>
+    <button class="nav active" data-page="dashboard"><i>▦</i><span>داشبورد</span></button>
+    <button class="nav" data-page="import"><i>⇧</i><span>ورود اطلاعات</span></button>
+    <button class="nav" data-page="documents"><i>≡</i><span>اسناد پردازش‌شده</span></button>
+    <button class="nav" data-page="tasks"><i>✓</i><span>کارتابل تصمیم‌ها</span><span class="nav-counts"><b id="navHuman">۰</b><b id="navPending">۰</b></span></button>
+    <button class="nav" data-page="reports"><i>▤</i><span>گزارش‌ها</span></button>
+    <p>سیستم</p>
+    <button class="nav" data-page="settings"><i>⚙</i><span>تنظیمات و حافظه</span></button>
+  </nav>
+  <div class="sidebar-footer"><div class="security-state"><span></span><div><b>پردازش امن</b><small>ارسال داده فقط با اقدام شما</small></div></div><div class="user-chip"><div>مد</div><span><b>مدیر سیستم</b><small>دسترسی کامل</small></span></div></div>
+</aside>
 
-    <div class="workspace-switcher">
-      <span>فضای کاری</span>
-      <button type="button"><i>ش</i><div><b>شرکت نمونه</b><small>سال مالی ۱۴۰۳</small></div><em>⌄</em></button>
-    </div>
+<div class="app-shell">
+  <header class="topbar">
+    <div class="page-title"><span id="pageEyebrow">نمای کلی</span><h1 id="pageHeading">داشبورد</h1></div>
+    <div class="topbar-context"><div><span>فایل فعال</span><b id="headerSource">هنوز فایلی انتخاب نشده</b></div></div>
+    <div class="topbar-actions"><button class="help-button" type="button">؟ راهنما</button><a class="primary-action" href="/api/report">↓ خروجی Excel</a></div>
+  </header>
 
-    <nav aria-label="منوی اصلی">
-      <p>عملیات مالی</p>
-      <button class="nav active" data-scroll="dashboard"><i>▦</i><span>داشبورد</span></button>
-      <button class="nav" data-scroll="importSection"><i>⇧</i><span>ورود اطلاعات</span></button>
-      <button class="nav" data-scroll="ledger"><i>≡</i><span>اسناد و دفتر روزنامه</span></button>
-      <button class="nav" data-scroll="reportCenter"><i>▤</i><span>گزارش‌های مالی</span></button>
-      <p>مرکز هوشمند</p>
-      <button class="nav" data-scroll="missions"><i>✦</i><span>تصمیم‌های هوشمند</span><b id="navPending">۰</b></button>
-      <button class="nav" data-scroll="humanWork"><i>✓</i><span>کارتابل بررسی</span><b id="navHuman">۰</b></button>
-      <button class="nav" data-scroll="warnings"><i>!</i><span>کنترل و خطاها</span></button>
-    </nav>
+  <main>
+    <!-- Dashboard -->
+    <section class="app-page active" data-page-panel="dashboard">
+      <div class="page-intro"><div><h2>وضعیت عملیات حسابداری</h2><p>از این صفحه فقط وضعیت، خطاها و اقدام بعدی را ببینید.</p></div><button class="primary-button" data-go-page="import">＋ پردازش فایل جدید</button></div>
 
-    <div class="sidebar-footer">
-      <div class="security-state"><span></span><div><b>پردازش امن و آفلاین</b><small>داده‌ای خودکار ارسال نمی‌شود</small></div></div>
-      <div class="user-chip"><div>مد</div><span><b>مدیر سیستم</b><small>مدیر دفتر حسابداری</small></span><button>•••</button></div>
-    </div>
-  </aside>
-
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="page-title"><span>داشبورد مالی</span><h1>مرکز کنترل حسابداری</h1></div>
-      <div class="topbar-actions">
-        <div class="period"><span>دوره گزارش</span><b>سال مالی ۱۴۰۳</b></div>
-        <button class="notification" title="اعلان‌ها">♢<i></i></button>
-        <a class="primary-action" href="/api/report">↓ دریافت گزارش Excel</a>
+      <div class="next-action" id="nextActionCard">
+        <div class="next-icon">۱</div><div><span>اقدام پیشنهادی</span><h3 id="nextActionTitle">یک فایل حسابداری بارگذاری کنید</h3><p id="nextActionText">برای شروع، خروجی Excel یا CSV نرم‌افزار حسابداری را وارد کنید.</p></div><button id="nextActionButton" class="primary-button" data-go-page="import">شروع ورود اطلاعات</button>
       </div>
-    </header>
 
-    <main>
-      <section id="dashboard" class="welcome-row">
-        <div><h2>سلام، وقت بخیر</h2><p>وضعیت مالی، اسناد و کارهای نیازمند بررسی را از اینجا مدیریت کنید.</p></div>
-        <div class="system-ready"><span>✓</span><div><b>سامانه آماده است</b><small>آخرین کنترل: همین حالا</small></div></div>
-      </section>
-
-      <section id="importSection" class="import-panel">
-        <div class="import-copy">
-          <div class="section-icon">⇧</div>
-          <div><h3>ورود و پردازش اطلاعات حسابداری</h3><p>خروجی Excel یا CSV هر نرم‌افزار را بارگذاری کنید. آقا ساختار، تراز و کیفیت داده را کنترل می‌کند.</p>
-            <div class="import-features"><span>✓ تشخیص خودکار ستون‌ها</span><span>✓ کنترل تراز اسناد</span><span>✓ ساخت گزارش حرفه‌ای</span></div>
-          </div>
+      <section class="workflow-card">
+        <div class="workflow-head"><div><h3>مسیر استاندارد پردازش</h3><p>هر پرونده دقیقاً از این پنج مرحله عبور می‌کند.</p></div><span>وضعیت پرونده جاری</span></div>
+        <div class="workflow-steps">
+          <div class="flow-step" id="flowImport"><i>۱</i><div><b>ورود اطلاعات</b><span>Excel یا CSV</span></div></div><em>←</em>
+          <div class="flow-step" id="flowParse"><i>۲</i><div><b>استانداردسازی</b><span>تاریخ، مبلغ و ستون‌ها</span></div></div><em>←</em>
+          <div class="flow-step" id="flowControl"><i>۳</i><div><b>کنترل حسابداری</b><span>تراز و اعتبار داده</span></div></div><em>←</em>
+          <div class="flow-step" id="flowReview"><i>۴</i><div><b>رفع ابهام</b><span>AI یا حسابدار</span></div></div><em>←</em>
+          <div class="flow-step" id="flowReport"><i>۵</i><div><b>گزارش نهایی</b><span>Excel حرفه‌ای</span></div></div>
         </div>
-        <label class="upload-button" id="dropZone"><input id="fileInput" type="file" accept=".xlsx,.xls,.csv"><strong>انتخاب فایل</strong><small>یا فایل را اینجا رها کنید</small></label>
       </section>
 
-      <section class="parser-learning hidden" id="parserLearning">
-        <div class="learning-icon">!</div>
-        <div class="learning-copy"><span>قالب جدید شناسایی شد</span><h3>ساختار این فایل هنوز تعریف نشده است</h3><p id="parserReason">برای این فایل یک مأموریت ساخت Parser آماده شده است.</p><small>کانفیگ فقط نگاشت داده است و هیچ کد اجرایی از AI پذیرفته نمی‌شود.</small></div>
-        <div class="learning-actions"><button id="parserPrompt" class="secondary-button" type="button">مشاهده پرامپت آموزش</button><label class="primary-button">بارگذاری کانفیگ JSON<input id="parserConfigInput" type="file" accept=".json"></label></div>
-      </section>
-
-      <section class="kpi-grid" aria-label="شاخص‌های اصلی">
-        <article class="kpi-card"><div class="kpi-head"><span>اسناد پردازش‌شده</span><i class="blue">▤</i></div><strong id="documents">—</strong><small id="source">فایل نمونه</small></article>
-        <article class="kpi-card"><div class="kpi-head"><span>ردیف‌های قطعی</span><i class="green">✓</i></div><strong id="resolved">—</strong><small>تأیید و آماده ثبت</small></article>
-        <article class="kpi-card"><div class="kpi-head"><span>تصمیم هوشمند باز</span><i class="amber">✦</i></div><strong id="pending">—</strong><small>در انتظار پاسخ یا بررسی</small></article>
-        <article class="kpi-card"><div class="kpi-head"><span>هشدار کنترلی</span><i class="red">!</i></div><strong id="warningCount">—</strong><small>نیازمند رسیدگی حسابدار</small></article>
+      <section class="kpi-grid">
+        <article class="kpi-card"><div class="kpi-head"><span>اسناد</span><i class="blue">▤</i></div><strong id="documents">—</strong><small id="source">بدون فایل فعال</small></article>
+        <article class="kpi-card"><div class="kpi-head"><span>ردیف قطعی</span><i class="green">✓</i></div><strong id="resolved">—</strong><small>آماده استفاده در گزارش</small></article>
+        <article class="kpi-card"><div class="kpi-head"><span>ابهام باز</span><i class="amber">✦</i></div><strong id="pending">—</strong><small>نیازمند تصمیم</small></article>
+        <article class="kpi-card"><div class="kpi-head"><span>هشدار</span><i class="red">!</i></div><strong id="warningCount">—</strong><small>نیازمند کنترل</small></article>
       </section>
 
       <section class="dashboard-grid">
-        <article class="card financial-card">
-          <div class="card-header"><div><h3>خلاصه گردش مالی</h3><p>جمع گردش فایل پردازش‌شده</p></div><span class="status-chip">محاسبه واقعی</span></div>
-          <div class="financial-body">
-            <div class="money-stat debit"><span>جمع بدهکار</span><strong id="debit">—</strong><small>ریال</small></div>
-            <div class="money-stat credit"><span>جمع بستانکار</span><strong id="credit">—</strong><small>ریال</small></div>
-          </div>
-          <div class="balance-row"><div><span>اختلاف تراز</span><strong id="balance">۰</strong><small> ریال</small></div><b id="balanceStatus">در حال تحلیل</b></div>
-        </article>
-
-        <article class="card processing-card">
-          <div class="card-header"><div><h3>وضعیت پردازش</h3><p>مراحل کنترل انجام‌شده توسط آقا</p></div><span class="online-dot">فعال</span></div>
-          <div class="process-log" id="agentLog"><p><time>اکنون</time><span class="ok">✓</span>هسته حسابداری آماده دریافت اطلاعات است.</p></div>
-        </article>
+        <article class="card financial-card"><div class="card-header"><div><h3>کنترل تراز</h3><p>جمع گردش فایل جاری به ریال</p></div><span class="status-chip">محاسبه از داده واقعی</span></div><div class="financial-body"><div class="money-stat debit"><span>جمع بدهکار</span><strong id="debit">—</strong><small>ریال</small></div><div class="money-stat credit"><span>جمع بستانکار</span><strong id="credit">—</strong><small>ریال</small></div></div><div class="balance-row"><div><span>اختلاف</span><strong id="balance">۰</strong><small> ریال</small></div><b id="balanceStatus">بدون داده</b></div></article>
+        <article class="card"><div class="card-header"><div><h3>گزارش آخرین پردازش</h3><p>کارهایی که سیستم روی فایل انجام داده است</p></div></div><div class="process-log" id="agentLog"><p><time>اکنون</time><span class="ok">✓</span>سامانه آماده ورود اطلاعات است.</p></div></article>
       </section>
+    </section>
 
-      <section class="profile-strip"><div><span>پروفایل Parser فعال</span><strong id="activeProfile">Parser استاندارد آقا</strong></div><div><span>قالب‌های یادگرفته‌شده</span><strong><b id="profileCount">۰</b> قالب</strong></div><div class="profile-security"><i>✓</i> کنترل‌شده و قابل حسابرسی</div></section>
+    <!-- Import -->
+    <section class="app-page" data-page-panel="import">
+      <div class="page-intro"><div><h2>ورود اطلاعات حسابداری</h2><p>فایل خام را وارد کنید؛ هیچ داده‌ای قبل از کنترل وارد گزارش نهایی نمی‌شود.</p></div></div>
+      <div class="import-layout">
+        <section class="card upload-main-card">
+          <div class="upload-title"><span>مرحله ۱ از ۵</span><h3>فایل خروجی نرم‌افزار حسابداری را انتخاب کنید</h3><p>فرمت‌های قابل قبول: Excel با پسوند XLSX یا XLS و فایل CSV</p></div>
+          <label class="standard-drop-zone" id="dropZone"><input id="fileInput" type="file" accept=".xlsx,.xls,.csv"><div class="upload-symbol">⇧</div><strong>فایل را اینجا رها کنید</strong><span>یا برای انتخاب فایل کلیک کنید</span><button type="button">انتخاب از کامپیوتر</button><small>حداکثر یک فایل در هر نوبت پردازش می‌شود</small></label>
+        </section>
+        <aside class="import-help card"><h3>بعد از بارگذاری چه می‌شود؟</h3><ol><li><b>تشخیص ساختار</b><span>ستون‌ها، شیت و ردیف هدر بررسی می‌شوند.</span></li><li><b>پاک‌سازی داده</b><span>اعداد، متن فارسی و تاریخ شمسی استاندارد می‌شوند.</span></li><li><b>کنترل اسناد</b><span>تراز، مبلغ و حساب‌ها اعتبارسنجی می‌شوند.</span></li><li><b>رفع ابهام</b><span>فقط موارد نامشخص به کارتابل می‌روند.</span></li><li><b>ساخت خروجی</b><span>گزارش حرفه‌ای و قابل محاسبه ساخته می‌شود.</span></li></ol><div class="privacy-note"><b>حریم خصوصی</b><p>آقا هیچ فایلی را خودکار به سرویس AI ارسال نمی‌کند.</p></div></aside>
+      </div>
+      <section class="parser-learning hidden" id="parserLearning"><div class="learning-icon">!</div><div class="learning-copy"><span>ساختار ناشناخته</span><h3>برای این قالب باید Parser تعریف شود</h3><p id="parserReason"></p><small>پرامپت آماده را به AI بدهید و کانفیگ JSON را برگردانید.</small></div><div class="learning-actions"><button id="parserPrompt" class="secondary-button" type="button">مشاهده پرامپت</button><label class="primary-button">بارگذاری کانفیگ<input id="parserConfigInput" type="file" accept=".json"></label></div></section>
+    </section>
 
-      <section class="card task-section" id="missions">
-        <div class="card-header"><div><h3>تصمیم‌های هوشمند</h3><p>موارد مبهمی که برای تصمیم دقیق به AI بیرونی یا اطلاعات بیشتر نیاز دارند.</p></div><span class="count-badge"><b id="missionCount">۰</b> مورد باز</span></div>
-        <div id="taskList" class="task-list"><div class="empty-state"><i>✓</i><b>مورد بازی وجود ندارد</b><span>تمام تصمیم‌ها تعیین تکلیف شده‌اند.</span></div></div>
-      </section>
+    <!-- Documents -->
+    <section class="app-page" data-page-panel="documents">
+      <div class="page-intro"><div><h2>اسناد پردازش‌شده</h2><p>ردیف‌های استانداردشده فایل جاری و وضعیت تعیین حساب آن‌ها</p></div><div class="page-actions"><button class="secondary-button" data-go-page="import">ورود فایل جدید</button><a class="primary-button" href="/api/report">دریافت Excel</a></div></div>
+      <div class="document-summary"><div><span>فایل منبع</span><b id="documentSource">—</b></div><div><span>Parser فعال</span><b id="activeProfile">Parser استاندارد آقا</b></div><div><span>قالب‌های ذخیره‌شده</span><b><i id="profileCount">۰</i> قالب</b></div></div>
+      <section class="card ledger-section" id="ledger"><div class="card-header"><div><h3>دفتر روزنامه استانداردشده</h3><p>برای دیدن جزئیات بیشتر، گزارش Excel را دریافت کنید.</p></div><a href="/api/report" class="text-link">دریافت گزارش کامل ←</a></div><div class="table-wrap"><table><thead><tr><th>شماره سند</th><th>تاریخ</th><th>شرح</th><th>حساب تشخیص‌داده‌شده</th><th>بدهکار</th><th>بستانکار</th><th>وضعیت</th></tr></thead><tbody id="ledgerRows"></tbody></table></div></section>
+    </section>
 
-      <section class="card human-work" id="humanWork">
-        <div class="card-header"><div><h3>کارتابل بررسی حسابدار</h3><p>کارهایی که به اطلاعات، قضاوت یا تأیید مسئول مالی نیاز دارند.</p></div><span class="count-badge human"><b id="humanCount">۰</b> کار باز</span></div>
-        <div class="automation-summary"><div><span>نرخ انجام خودکار عملیات</span><b id="automationRate">۰٪</b></div><div class="progress"><i id="automationFill"></i></div><small><b id="learnedRules">۰</b> قاعده از تصمیم‌های تأییدشده یاد گرفته شده است.</small></div>
-        <div id="humanTaskList" class="human-task-list"><div class="empty-state"><i>✓</i><b>کارتابل خالی است</b><span>در حال حاضر اقدامی از شما خواسته نشده است.</span></div></div>
-      </section>
+    <!-- Tasks -->
+    <section class="app-page" data-page-panel="tasks">
+      <div class="page-intro"><div><h2>کارتابل بررسی</h2><p>تمام مواردی که هنوز برای ثبت قطعی به تصمیم یا اطلاعات نیاز دارند.</p></div></div>
+      <div class="task-help"><i>i</i><div><b>تفاوت دو کارتابل چیست؟</b><p>«تصمیم‌های هوشمند» را می‌توانید با پرامپت به AI بیرونی بدهید. «بررسی حسابدار» مستقیماً به اطلاعات یا تأیید شما نیاز دارد.</p></div></div>
+      <section class="card task-section" id="missions"><div class="card-header"><div><h3>تصمیم‌های هوشمند</h3><p>شرح یا ساختاری که با قواعد قطعی قابل تشخیص نبوده است.</p></div><span class="count-badge"><b id="missionCount">۰</b> مورد</span></div><div id="taskList" class="task-list"><div class="empty-state"><i>✓</i><b>تصمیم بازی وجود ندارد</b><span>تمام موارد هوشمند تعیین تکلیف شده‌اند.</span></div></div></section>
+      <section class="card human-work" id="humanWork"><div class="card-header"><div><h3>نیازمند بررسی حسابدار</h3><p>اطلاعات یا تأییدی که فقط مسئول مالی می‌تواند ارائه کند.</p></div><span class="count-badge human"><b id="humanCount">۰</b> کار</span></div><div class="automation-summary"><div><span>نرخ انجام خودکار</span><b id="automationRate">۰٪</b></div><div class="progress"><i id="automationFill"></i></div><small><b id="learnedRules">۰</b> قاعده از پاسخ‌های تأییدشده یاد گرفته شده است.</small></div><div id="humanTaskList" class="human-task-list"><div class="empty-state"><i>✓</i><b>کاری برای بررسی وجود ندارد</b><span>همه موارد تعیین تکلیف شده‌اند.</span></div></div></section>
+      <section class="card warning-section" id="warnings"><div class="card-header"><div><h3>خطاها و هشدارهای کنترلی</h3><p>این موارد ممکن است مانع اتکاپذیری گزارش شوند.</p></div></div><div id="warningList" class="warning-list"></div></section>
+    </section>
 
-      <section class="card report-center" id="reportCenter">
-        <div class="card-header"><div><h3>مرکز گزارش‌های مالی</h3><p>گزارش‌های قابل اتکا بر اساس داده موجود شرکت</p></div><a href="/api/report" class="secondary-button">دریافت بسته کامل گزارش‌ها</a></div>
-        <div class="report-grid">
-          <div class="report-card ready"><i>▤</i><div><b>دفتر روزنامه</b><span>تمام ردیف‌های استانداردشده</span></div><em>آماده</em></div>
-          <div class="report-card ready"><i>≋</i><div><b>تراز آزمایشی</b><span>گردش و مانده حساب‌ها</span></div><em>آماده</em></div>
-          <div class="report-card ready"><i>⌁</i><div><b>گردش حساب‌ها</b><span>ریز حساب و مانده جاری</span></div><em>آماده</em></div>
-          <div class="report-card ready"><i>▥</i><div><b>تحلیل ماهانه</b><span>روند گردش بر مبنای ماه شمسی</span></div><em>آماده</em></div>
-          <div class="report-card ready"><i>✓</i><div><b>کنترل اسناد</b><span>تراز، هشدار و موارد رسیدگی</span></div><em>آماده</em></div>
-          <div class="report-card locked"><i>◫</i><div><b>سود و زیان</b><span>نیازمند تکمیل ماهیت حساب‌ها</span><button onclick="activateReport('profit-loss')">تکمیل پیش‌نیازها</button></div></div>
-          <div class="report-card locked"><i>◇</i><div><b>ترازنامه</b><span>نیازمند مانده افتتاحیه و طبقه‌بندی</span><button onclick="activateReport('balance-sheet')">تکمیل پیش‌نیازها</button></div></div>
-          <div class="report-card locked"><i>◌</i><div><b>نقدینگی و مطالبات</b><span>نیازمند سررسید و اطلاعات بانکی</span><button onclick="activateReport('cashflow')">تکمیل پیش‌نیازها</button></div></div>
-        </div>
-      </section>
+    <!-- Reports -->
+    <section class="app-page" data-page-panel="reports">
+      <div class="page-intro"><div><h2>گزارش‌های مالی</h2><p>فقط گزارش‌هایی که پیش‌نیاز داده‌ای آن‌ها کامل است قابل دریافت هستند.</p></div><a href="/api/report" class="primary-button">↓ دریافت بسته کامل Excel</a></div>
+      <section class="card report-center" id="reportCenter"><div class="report-info"><b>بسته گزارش فعلی</b><p>گزارش‌ها از فایل فعال ساخته می‌شوند و شامل داده ساختگی نیستند.</p></div><div class="report-grid">
+        <div class="report-card ready"><i>▤</i><div><b>دفتر روزنامه</b><span>تمام ردیف‌های استانداردشده</span></div><em>آماده</em></div><div class="report-card ready"><i>≋</i><div><b>تراز آزمایشی</b><span>گردش و مانده حساب‌ها</span></div><em>آماده</em></div><div class="report-card ready"><i>⌁</i><div><b>گردش حساب‌ها</b><span>ریز حساب و مانده جاری</span></div><em>آماده</em></div><div class="report-card ready"><i>▥</i><div><b>تحلیل ماهانه</b><span>روند گردش ماه شمسی</span></div><em>آماده</em></div><div class="report-card ready"><i>✓</i><div><b>کنترل اسناد</b><span>تراز و موارد رسیدگی</span></div><em>آماده</em></div>
+        <div class="report-card locked"><i>◫</i><div><b>سود و زیان</b><span>ماهیت حساب‌ها کامل نیست</span><button onclick="activateReport('profit-loss')">تکمیل پیش‌نیازها</button></div></div><div class="report-card locked"><i>◇</i><div><b>ترازنامه</b><span>مانده افتتاحیه و طبقه‌بندی لازم است</span><button onclick="activateReport('balance-sheet')">تکمیل پیش‌نیازها</button></div></div><div class="report-card locked"><i>◌</i><div><b>نقدینگی و مطالبات</b><span>سررسید و اطلاعات بانکی لازم است</span><button onclick="activateReport('cashflow')">تکمیل پیش‌نیازها</button></div></div>
+      </div></section>
+    </section>
 
-      <section class="card ledger-section" id="ledger">
-        <div class="card-header"><div><h3>آخرین ردیف‌های دفتر</h3><p>خلاصه داده استانداردشده و وضعیت تشخیص حساب</p></div><a href="/api/report" class="text-link">مشاهده در گزارش Excel ←</a></div>
-        <div class="table-wrap"><table><thead><tr><th>شماره سند</th><th>تاریخ</th><th>شرح</th><th>حساب</th><th>بدهکار</th><th>بستانکار</th><th>وضعیت</th></tr></thead><tbody id="ledgerRows"></tbody></table></div>
-      </section>
+    <!-- Settings -->
+    <section class="app-page" data-page-panel="settings">
+      <div class="page-intro"><div><h2>تنظیمات و حافظه سیستم</h2><p>وضعیت یادگیری کنترل‌شده آقا و تنظیمات پردازش</p></div></div>
+      <div class="settings-grid"><section class="card settings-card"><h3>حافظه Parser</h3><p>قالب‌های Excel و CSV که قبلاً به آقا آموزش داده شده‌اند.</p><strong><b id="settingsProfileCount">—</b> قالب ذخیره‌شده</strong></section><section class="card settings-card"><h3>حافظه تصمیم</h3><p>قواعدی که بعد از تأییدهای انسانی بدون تعارض فعال شده‌اند.</p><strong><b id="settingsRuleCount">—</b> قاعده فعال</strong></section><section class="card settings-card"><h3>حالت اتصال AI</h3><p>پرامپت‌ها دستی کپی می‌شوند و اتصال مستقیم وجود ندارد.</p><strong class="safe">آفلاین و تحت کنترل</strong></section><section class="card settings-card"><h3>ثبت حسابرسی</h3><p>ورودی، پاسخ، تصمیم و زمان تمام عملیات هوشمند ثبت می‌شود.</p><strong class="safe">فعال</strong></section></div>
+    </section>
 
-      <section class="card warning-section" id="warnings">
-        <div class="card-header"><div><h3>کنترل‌ها و هشدارها</h3><p>مواردی که پیش از ثبت قطعی باید بررسی شوند</p></div></div>
-        <div id="warningList" class="warning-list"></div>
-      </section>
+    <footer><span>آقا — حسابداری هوشمند</span><p>خروجی ابزار کمکی است و ثبت نهایی با تأیید مسئول مالی انجام می‌شود.</p><b>نسخه آزمایشی ۰.۳</b></footer>
+  </main>
+</div>
 
-      <footer><span>آقا — سامانه هوشمند حسابداری</span><p>تصمیم‌های مالی حساس پس از تأیید مسئول مجاز ثبت می‌شوند.</p><b>نسخه آزمایشی ۰.۲</b></footer>
-    </main>
-  </div>
-
-  <dialog id="answerDialog"><form method="dialog"><button class="dialog-close">×</button><span class="dialog-label">ثبت پاسخ هوش مصنوعی</span><h3 id="dialogTitle">پاسخ JSON</h3><p>خروجی خام و معتبر JSON را در کادر زیر قرار دهید.</p><textarea id="answerJson" spellcheck="false" placeholder='{"task_id": "TX-...", ...}'></textarea><div class="dialog-actions"><button value="cancel" class="ghost">انصراف</button><button type="button" id="submitAnswer" class="primary">اعتبارسنجی و ادامه</button></div></form></dialog>
-
-  <div id="humanDialog" class="modal-overlay hidden" role="dialog" aria-modal="true"><section class="modal-card"><button type="button" id="closeHuman" class="dialog-close">×</button><span class="dialog-label green">درخواست بررسی حسابدار</span><h3 id="humanDialogTitle">تکمیل اطلاعات</h3><p id="humanInstructions"></p><div id="humanContext" class="human-context"></div><form id="humanForm" class="human-form"></form><div class="dialog-actions"><button type="button" id="cancelHuman" class="ghost">بعداً</button><button type="button" id="submitHuman" class="primary">ثبت پاسخ و ادامه</button></div></section></div>
-
-  <div id="promptDialog" class="modal-overlay hidden" role="dialog" aria-modal="true"><section class="modal-card prompt-modal"><button type="button" id="closePrompt" class="dialog-close">×</button><span class="dialog-label">پرامپت آماده ارسال</span><h3 id="promptTitle">پرامپت مأموریت</h3><p>متن کامل را کپی و به هوش مصنوعی دلخواه بدهید.</p><textarea id="promptText" class="prompt-text" readonly spellcheck="false"></textarea><div class="prompt-meta"><span>فقط متن داخل کادر کپی می‌شود</span><b id="promptChars">۰ کاراکتر</b></div><div class="dialog-actions"><button type="button" id="cancelPrompt" class="ghost">بستن</button><button type="button" id="copyPrompt" class="primary"><span>□</span> کپی کامل پرامپت</button></div></section></div>
-
-  <div id="loader" class="loader hidden"><div class="spinner"></div><strong>در حال پردازش اطلاعات</strong><small id="loaderText">لطفاً چند لحظه صبر کنید…</small></div>
-  <script src="/static/app.js?v=8"></script>
-</body>
-</html>
+<dialog id="answerDialog"><form method="dialog"><button class="dialog-close">×</button><span class="dialog-label">ثبت پاسخ AI</span><h3 id="dialogTitle">پاسخ JSON</h3><p>خروجی خام JSON را بدون Markdown وارد کنید.</p><textarea id="answerJson" spellcheck="false" placeholder='{"task_id": "TX-...", ...}'></textarea><div class="dialog-actions"><button value="cancel" class="ghost">انصراف</button><button type="button" id="submitAnswer" class="primary">اعتبارسنجی و ادامه</button></div></form></dialog>
+<div id="humanDialog" class="modal-overlay hidden"><section class="modal-card"><button type="button" id="closeHuman" class="dialog-close">×</button><span class="dialog-label green">درخواست بررسی حسابدار</span><h3 id="humanDialogTitle">تکمیل اطلاعات</h3><p id="humanInstructions"></p><div id="humanContext" class="human-context"></div><form id="humanForm" class="human-form"></form><div class="dialog-actions"><button type="button" id="cancelHuman" class="ghost">بعداً</button><button type="button" id="submitHuman" class="primary">ثبت و ادامه</button></div></section></div>
+<div id="promptDialog" class="modal-overlay hidden"><section class="modal-card prompt-modal"><button type="button" id="closePrompt" class="dialog-close">×</button><span class="dialog-label">پرامپت آماده</span><h3 id="promptTitle">پرامپت مأموریت</h3><p>متن را کپی و به AI دلخواه بدهید.</p><textarea id="promptText" class="prompt-text" readonly></textarea><div class="prompt-meta"><span>کل متن داخل کادر کپی می‌شود</span><b id="promptChars">۰ کاراکتر</b></div><div class="dialog-actions"><button type="button" id="cancelPrompt" class="ghost">بستن</button><button type="button" id="copyPrompt" class="primary"><span>□</span> کپی کامل</button></div></section></div>
+<div id="loader" class="loader hidden"><div class="spinner"></div><strong>در حال پردازش</strong><small id="loaderText">لطفاً صبر کنید…</small></div>
+<script src="/static/app.js?v=9"></script>
+</body></html>
