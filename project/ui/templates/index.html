@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#17213a"><title>آقا | حسابداری هوشمند</title>
-  <link rel="stylesheet" href="/static/app.css?v=9">
+  <link rel="stylesheet" href="/static/app.css?v=10">
 </head>
 <body>
 <div id="toast" class="toast" role="status"></div>
@@ -12,16 +12,32 @@
   <div class="brand"><div class="brand-mark">آ</div><div><strong>آقا</strong><span>حسابداری هوشمند</span></div></div>
   <div class="workspace-switcher"><span>فضای کاری جاری</span><button type="button"><i>مح</i><div><b>پردازش محلی</b><small>بدون اتصال مستقیم به AI</small></div><em>⌄</em></button></div>
   <nav aria-label="منوی اصلی">
-    <p>منوی اصلی</p>
-    <button class="nav active" data-page="dashboard"><i>▦</i><span>داشبورد</span></button>
-    <button class="nav" data-page="import"><i>⇧</i><span>ورود اطلاعات</span></button>
-    <button class="nav" data-page="documents"><i>≡</i><span>اسناد پردازش‌شده</span></button>
-    <button class="nav" data-page="tasks"><i>✓</i><span>کارتابل تصمیم‌ها</span><span class="nav-counts"><b id="navHuman">۰</b><b id="navPending">۰</b></span></button>
-    <button class="nav" data-page="reports"><i>▤</i><span>گزارش‌ها</span></button>
-    <p>سیستم</p>
+    <p>مدیریت</p>
+    <button class="nav active" data-page="dashboard"><i>▦</i><span>داشبورد شرکت</span></button>
+    <button class="nav" data-page="accounting"><i>≡</i><span>حسابداری و دفترکل</span></button>
+    <button class="nav" data-page="sales"><i>↗</i><span>فروش و مشتریان</span></button>
+    <button class="nav" data-page="purchases"><i>↙</i><span>خرید و تأمین‌کنندگان</span></button>
+    <button class="nav" data-page="treasury"><i>◇</i><span>خزانه، بانک و چک</span></button>
+    <button class="nav" data-page="inventory"><i>□</i><span>انبار و کالا</span></button>
+    <p>مالی و قانونی</p>
+    <button class="nav" data-page="payroll"><i>♙</i><span>حقوق و دستمزد</span></button>
+    <button class="nav" data-page="tax"><i>٪</i><span>مالیات و مودیان</span></button>
+    <button class="nav" data-page="reports"><i>▤</i><span>گزارش‌های مالی</span></button>
+    <button class="nav" data-page="tasks"><i>✓</i><span>کارتابل تأیید</span><span class="nav-counts"><b id="navHuman">۰</b><b id="navPending">۰</b></span></button>
+    <p>ابزارها</p>
+    <button class="nav" data-page="import"><i>⇧</i><span>ورود Excel و CSV</span></button>
     <button class="nav" data-page="settings"><i>⚙</i><span>تنظیمات و حافظه</span></button>
   </nav>
   <div class="sidebar-footer"><div class="security-state"><span></span><div><b>پردازش امن</b><small>ارسال داده فقط با اقدام شما</small></div></div><div class="user-chip"><div>مد</div><span><b>مدیر سیستم</b><small>دسترسی کامل</small></span></div></div>
+</aside>
+
+<aside class="copilot-panel">
+  <div class="copilot-header"><div class="copilot-avatar">آ</div><div><b>دستیار آقا</b><span><i></i> آماده دریافت فرمان</span></div><button id="clearCopilot" title="پاک‌کردن گفتگو">↻</button></div>
+  <div class="copilot-body" id="copilotMessages">
+    <div class="copilot-message assistant"><b>چه کاری انجام بدهم؟</b><p>می‌توانید یک عملیات مالی، کنترل یا گزارش را به زبان ساده درخواست کنید.</p></div>
+    <div class="copilot-suggestions"><button data-command="اسناد نامتوازن را بررسی کن">اسناد نامتوازن را بررسی کن</button><button data-command="وضعیت مالی این فایل را تحلیل کن">وضعیت مالی را تحلیل کن</button><button data-command="گزارش مدیریتی آماده کن">گزارش مدیریتی آماده کن</button></div>
+  </div>
+  <div class="copilot-input"><textarea id="copilotInput" placeholder="مثلاً: گردش بانک امروز را بررسی و اسنادش را آماده کن"></textarea><div><span>AI آفلاین؛ خروجی به‌صورت پرامپت آماده می‌شود</span><button id="sendCopilot">➤</button></div></div>
 </aside>
 
 <div class="app-shell">
@@ -78,10 +94,52 @@
     </section>
 
     <!-- Documents -->
-    <section class="app-page" data-page-panel="documents">
-      <div class="page-intro"><div><h2>اسناد پردازش‌شده</h2><p>ردیف‌های استانداردشده فایل جاری و وضعیت تعیین حساب آن‌ها</p></div><div class="page-actions"><button class="secondary-button" data-go-page="import">ورود فایل جدید</button><a class="primary-button" href="/api/report">دریافت Excel</a></div></div>
+    <section class="app-page" data-page-panel="accounting">
+      <div class="module-tabs"><button class="active">اسناد حسابداری</button><button>کدینگ حساب‌ها</button><button>دفتر کل</button><button>دفتر معین</button><button>مراکز هزینه</button><button>دوره‌های مالی</button></div>
+      <div class="page-intro"><div><h2>حسابداری و دفترکل</h2><p>مدیریت اسناد، کدینگ، دفاتر و ثبت‌های قطعی</p></div><div class="page-actions"><button class="secondary-button" data-go-page="import">ورود گروهی</button><button class="primary-button" data-copilot-command="یک سند حسابداری جدید برای من آماده کن">＋ سند حسابداری جدید</button></div></div>
       <div class="document-summary"><div><span>فایل منبع</span><b id="documentSource">—</b></div><div><span>Parser فعال</span><b id="activeProfile">Parser استاندارد آقا</b></div><div><span>قالب‌های ذخیره‌شده</span><b><i id="profileCount">۰</i> قالب</b></div></div>
       <section class="card ledger-section" id="ledger"><div class="card-header"><div><h3>دفتر روزنامه استانداردشده</h3><p>برای دیدن جزئیات بیشتر، گزارش Excel را دریافت کنید.</p></div><a href="/api/report" class="text-link">دریافت گزارش کامل ←</a></div><div class="table-wrap"><table><thead><tr><th>شماره سند</th><th>تاریخ</th><th>شرح</th><th>حساب تشخیص‌داده‌شده</th><th>بدهکار</th><th>بستانکار</th><th>وضعیت</th></tr></thead><tbody id="ledgerRows"></tbody></table></div></section>
+    </section>
+
+    <!-- Operational modules -->
+    <section class="app-page" data-page-panel="sales">
+      <div class="module-tabs"><button class="active">پیشخوان فروش</button><button>مشتریان</button><button>پیش‌فاکتورها</button><button>فاکتورهای فروش</button><button>دریافت‌ها</button><button>مطالبات</button></div>
+      <div class="page-intro"><div><h2>فروش و مشتریان</h2><p>از صدور فاکتور تا دریافت وجه و پیگیری مطالبات</p></div><div class="page-actions"><button class="secondary-button" data-copilot-command="مطالبات سررسیدشده را بررسی کن">تحلیل مطالبات با آقا</button><button class="primary-button" data-copilot-command="یک فاکتور فروش جدید آماده کن">＋ فاکتور فروش</button></div></div>
+      <div class="module-kpis"><article><span>فروش دوره</span><b>—</b><small>پس از اتصال داده فروش</small></article><article><span>مطالبات باز</span><b>—</b><small>نیازمند اطلاعات مشتریان</small></article><article><span>دریافت امروز</span><b>—</b><small>بدون تراکنش ثبت‌شده</small></article><article><span>فاکتور سررسیدگذشته</span><b>—</b><small>بدون داده سررسید</small></article></div>
+      <section class="card module-empty"><i>↗</i><h3>عملیات فروشی ثبت نشده است</h3><p>برای شروع، اطلاعات مشتریان و فاکتورهای فروش را از ERPNext همگام یا به‌صورت گروهی وارد کنید.</p><div><button class="secondary-button" data-go-page="import">ورود اطلاعات فروش</button><button class="primary-button" data-copilot-command="برای راه‌اندازی ماژول فروش یک برنامه مرحله‌ای بساز">راه‌اندازی با آقا</button></div></section>
+    </section>
+
+    <section class="app-page" data-page-panel="purchases">
+      <div class="module-tabs"><button class="active">پیشخوان خرید</button><button>تأمین‌کنندگان</button><button>سفارش خرید</button><button>فاکتورهای خرید</button><button>پرداخت‌ها</button><button>بدهی‌ها</button></div>
+      <div class="page-intro"><div><h2>خرید و تأمین‌کنندگان</h2><p>کنترل خرید، هزینه، بدهی و تسویه تأمین‌کنندگان</p></div><div class="page-actions"><button class="secondary-button" data-copilot-command="بدهی‌های سررسیدشده را تحلیل کن">تحلیل بدهی‌ها</button><button class="primary-button" data-copilot-command="یک فاکتور خرید جدید آماده کن">＋ فاکتور خرید</button></div></div>
+      <div class="module-kpis"><article><span>خرید دوره</span><b>—</b><small>پس از اتصال داده خرید</small></article><article><span>بدهی باز</span><b>—</b><small>نیازمند اطلاعات تأمین‌کنندگان</small></article><article><span>پرداخت امروز</span><b>—</b><small>بدون پرداخت ثبت‌شده</small></article><article><span>فاکتور تسویه‌نشده</span><b>—</b><small>بدون داده سررسید</small></article></div>
+      <section class="card module-empty"><i>↙</i><h3>عملیات خریدی ثبت نشده است</h3><p>تأمین‌کنندگان و فاکتورهای خرید را وارد یا از ERPNext همگام کنید.</p><div><button class="secondary-button" data-go-page="import">ورود اطلاعات خرید</button><button class="primary-button" data-copilot-command="برای راه‌اندازی ماژول خرید یک برنامه مرحله‌ای بساز">راه‌اندازی با آقا</button></div></section>
+    </section>
+
+    <section class="app-page" data-page-panel="treasury">
+      <div class="module-tabs"><button class="active">نمای کلی خزانه</button><button>حساب‌های بانکی</button><button>صندوق‌ها</button><button>دریافت و پرداخت</button><button>چک‌ها</button><button>مغایرت بانکی</button></div>
+      <div class="page-intro"><div><h2>خزانه، بانک و چک</h2><p>مدیریت نقدینگی، عملیات بانکی، چک و مغایرت‌گیری</p></div><div class="page-actions"><button class="secondary-button" data-copilot-command="گردش بانک را با اسناد حسابداری تطبیق بده">مغایرت‌گیری با آقا</button><button class="primary-button" data-copilot-command="یک دریافت یا پرداخت جدید آماده کن">＋ دریافت / پرداخت</button></div></div>
+      <div class="module-kpis"><article><span>مانده بانک</span><b>—</b><small>حساب بانکی تعریف نشده</small></article><article><span>مانده صندوق</span><b>—</b><small>صندوق تعریف نشده</small></article><article><span>چک‌های در جریان</span><b>—</b><small>داده چک موجود نیست</small></article><article><span>مغایرت باز</span><b>—</b><small>گردش بانک وارد نشده</small></article></div>
+      <section class="card module-empty"><i>◇</i><h3>حساب بانکی یا صندوقی تعریف نشده است</h3><p>برای استفاده از خزانه، ابتدا حساب‌های بانکی و صندوق شرکت را متصل کنید.</p><div><button class="secondary-button" data-go-page="import">ورود گردش بانک</button><button class="primary-button" data-copilot-command="برای راه‌اندازی خزانه و حساب‌های بانکی راهنمایی‌ام کن">راه‌اندازی خزانه</button></div></section>
+    </section>
+
+    <section class="app-page" data-page-panel="inventory">
+      <div class="module-tabs"><button class="active">نمای کلی انبار</button><button>کالا و خدمات</button><button>انبارها</button><button>رسید و حواله</button><button>کاردکس</button><button>ارزش موجودی</button></div>
+      <div class="page-intro"><div><h2>انبار و کالا</h2><p>موجودی، گردش کالا، بهای تمام‌شده و کنترل انبار</p></div><button class="primary-button" data-copilot-command="برای تعریف کالا و انبار جدید کمک کن">＋ کالا یا انبار</button></div>
+      <section class="card module-empty"><i>□</i><h3>ماژول انبار هنوز پیکربندی نشده است</h3><p>کالاها، واحدهای سنجش و انبارها را از ERPNext همگام کنید.</p><button class="primary-button" data-copilot-command="پیش‌نیازهای راه‌اندازی انبار را مشخص کن">راه‌اندازی با آقا</button></section>
+    </section>
+
+    <section class="app-page" data-page-panel="payroll">
+      <div class="module-tabs"><button class="active">داشبورد حقوق</button><button>پرسنل</button><button>قراردادها</button><button>کارکرد</button><button>لیست حقوق</button><button>بیمه و مالیات</button></div>
+      <div class="page-intro"><div><h2>حقوق و دستمزد</h2><p>پرسنل، کارکرد، محاسبه حقوق، بیمه و مالیات حقوق</p></div><button class="primary-button" data-copilot-command="فرآیند محاسبه حقوق این ماه را آماده کن">محاسبه حقوق دوره</button></div>
+      <section class="card module-empty"><i>♙</i><h3>اطلاعات پرسنلی ثبت نشده است</h3><p>برای شروع، اطلاعات پرسنل، قرارداد و احکام حقوقی را وارد کنید.</p><button class="primary-button" data-copilot-command="برای راه‌اندازی حقوق و دستمزد یک چک‌لیست بساز">راه‌اندازی با آقا</button></section>
+    </section>
+
+    <section class="app-page" data-page-panel="tax">
+      <div class="module-tabs"><button class="active">تقویم مالیاتی</button><button>ارزش افزوده</button><button>سامانه مودیان</button><button>گزارشات فصلی</button><button>اظهارنامه</button><button>پرونده‌ها</button></div>
+      <div class="page-intro"><div><h2>مالیات و سامانه مودیان</h2><p>کنترل تکالیف، صورتحساب‌ها، اظهارنامه و مهلت‌های قانونی</p></div><button class="primary-button" data-copilot-command="تکالیف مالیاتی پیش رو را بررسی کن">بررسی تکالیف با آقا</button></div>
+      <section class="compliance-warning"><b>تأیید انسانی الزامی</b><p>ارسال قانونی، اظهارنامه و صورتحساب مودیان بدون تأیید مسئول مجاز انجام نمی‌شود.</p></section>
+      <section class="card module-empty"><i>٪</i><h3>پروفایل مالیاتی شرکت تکمیل نشده است</h3><p>سال مالی، شناسه‌های مالیاتی و نوع فعالیت شرکت را تعریف کنید.</p><button class="primary-button" data-copilot-command="فیلدهای لازم برای تکمیل پروفایل مالیاتی را از من بپرس">تکمیل پروفایل با آقا</button></section>
     </section>
 
     <!-- Tasks -->
@@ -116,5 +174,5 @@
 <div id="humanDialog" class="modal-overlay hidden"><section class="modal-card"><button type="button" id="closeHuman" class="dialog-close">×</button><span class="dialog-label green">درخواست بررسی حسابدار</span><h3 id="humanDialogTitle">تکمیل اطلاعات</h3><p id="humanInstructions"></p><div id="humanContext" class="human-context"></div><form id="humanForm" class="human-form"></form><div class="dialog-actions"><button type="button" id="cancelHuman" class="ghost">بعداً</button><button type="button" id="submitHuman" class="primary">ثبت و ادامه</button></div></section></div>
 <div id="promptDialog" class="modal-overlay hidden"><section class="modal-card prompt-modal"><button type="button" id="closePrompt" class="dialog-close">×</button><span class="dialog-label">پرامپت آماده</span><h3 id="promptTitle">پرامپت مأموریت</h3><p>متن را کپی و به AI دلخواه بدهید.</p><textarea id="promptText" class="prompt-text" readonly></textarea><div class="prompt-meta"><span>کل متن داخل کادر کپی می‌شود</span><b id="promptChars">۰ کاراکتر</b></div><div class="dialog-actions"><button type="button" id="cancelPrompt" class="ghost">بستن</button><button type="button" id="copyPrompt" class="primary"><span>□</span> کپی کامل</button></div></section></div>
 <div id="loader" class="loader hidden"><div class="spinner"></div><strong>در حال پردازش</strong><small id="loaderText">لطفاً صبر کنید…</small></div>
-<script src="/static/app.js?v=9"></script>
+<script src="/static/app.js?v=10"></script>
 </body></html>

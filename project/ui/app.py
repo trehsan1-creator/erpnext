@@ -13,7 +13,7 @@ from typing import Any
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ai_bridge.client import OfflineAIBridge
 from ai_bridge.parser_learning import ParserLearningBridge
@@ -72,6 +72,10 @@ recovery_engine = RecoveryEngine(ROOT, DATA_ROOT, human_tasks)
 
 class AIAnswer(BaseModel):
     answer: dict[str, Any]
+
+
+class CopilotCommand(BaseModel):
+    command: str = Field(min_length=3, max_length=2000)
 
 
 def _serialize(result: PipelineResult) -> dict[str, Any]:
@@ -186,6 +190,35 @@ def _resume_or_recover(path: Path, display_name: str | None = None) -> dict[str,
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "service": "agha-accounting"}
+
+
+@app.post("/api/copilot/command")
+def create_copilot_command(payload: CopilotCommand) -> dict[str, Any]:
+    """Turn a natural-language command into an offline, auditable agent mission."""
+    result = state.get("result")
+    context: dict[str, Any] = {
+        "user_command": payload.command.strip(),
+        "active_file": state.get("display_name"),
+    }
+    if isinstance(result, PipelineResult):
+        context.update({
+            "document_count": len(result.documents), "line_count": len(result.lines),
+            "warning_count": len(result.warnings), "pending_ai_count": len(result.pending_task_ids),
+        })
+    blocker = recovery_engine.capture(
+        source_stage="workflow", operation="copilot_command", error_code="AGENT_PLAN_REQUIRED",
+        title="برنامه اجرای فرمان کاربر", message=payload.command.strip(), context=context,
+        safe_capabilities=[
+            "inspect_accounting_context", "request_human", "propose_safe_configuration",
+            "propose_accounting_steps", "explain_manual_action",
+        ], source_file=state.get("display_name"),
+    )
+    return {
+        "mission_id": blocker.blocker_id,
+        "title": blocker.title,
+        "message": "فرمان ثبت شد؛ برنامه اجرای ساختاریافته آماده دریافت است.",
+        "prompt_url": f"/api/recovery-tasks/{blocker.blocker_id}/prompt",
+    }
 
 
 @app.get("/", response_class=HTMLResponse)
