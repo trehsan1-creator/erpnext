@@ -30,7 +30,11 @@ class PersianExcelReport:
         summary.title = "خلاصه مدیریتی"
         self._summary(summary, result)
         self._journal(workbook.create_sheet("دفتر روزنامه"), result)
+        self._trial_balance(workbook.create_sheet("تراز آزمایشی"), result)
+        self._account_ledger(workbook.create_sheet("گردش حساب‌ها"), result)
+        self._monthly_analysis(workbook.create_sheet("تحلیل ماهانه"), result)
         self._documents(workbook.create_sheet("کنترل اسناد"), result)
+        self._review_queue(workbook.create_sheet("کارتابل رسیدگی"), result)
         self._warnings(workbook.create_sheet("هشدارها"), result)
         self._invalid(workbook.create_sheet("ردیف‌های نامعتبر"), result)
         for sheet in workbook.worksheets:
@@ -104,6 +108,92 @@ class PersianExcelReport:
             ws.add_table(table)
             yellow = PatternFill("solid", fgColor=self.theme["warning_fill"])
             ws.conditional_formatting.add(f"A2:M{ws.max_row}", FormulaRule(formula=['$J2<>"حل‌شده"'], fill=yellow))
+
+    def _trial_balance(self, ws: Any, result: PipelineResult) -> None:
+        headers = ["ردیف", "کد حساب", "نام حساب", "گردش بدهکار", "گردش بستانکار",
+                   "مانده بدهکار", "مانده بستانکار", "تعداد ردیف"]
+        ws.append(headers)
+        accounts: dict[tuple[str, str], dict[str, Any]] = {}
+        for line in result.lines:
+            key = (line.account_code or "نامشخص", line.account_name or "حساب تعیین‌نشده")
+            item = accounts.setdefault(key, {"debit": Decimal("0"), "credit": Decimal("0"), "count": 0})
+            item["debit"] += line.debit; item["credit"] += line.credit; item["count"] += 1
+        for index, ((code, name), item) in enumerate(sorted(accounts.items()), 1):
+            balance = item["debit"] - item["credit"]
+            ws.append([index, code, name, float(item["debit"]), float(item["credit"]),
+                       float(max(balance, Decimal("0"))), float(max(-balance, Decimal("0"))), item["count"]])
+        total_row = ws.max_row + 1
+        ws.cell(total_row, 3, "جمع کل")
+        for column in range(4, 8):
+            ws.cell(total_row, column, f"=SUM({get_column_letter(column)}2:{get_column_letter(column)}{total_row-1})")
+            ws.cell(total_row, column).number_format = self.MONEY_FORMAT
+        for cell in ws[total_row]:
+            cell.font = Font(name=self.font_name, bold=True, color="FFFFFF")
+            cell.fill = PatternFill("solid", fgColor=self.theme["header_fill"])
+        self._style_header(ws, 1, len(headers)); ws.freeze_panes = "A2"; ws.auto_filter.ref = f"A1:H{max(1,total_row-1)}"
+        for row in range(2, total_row):
+            for column in range(4, 8): ws.cell(row, column).number_format = self.MONEY_FORMAT
+
+    def _account_ledger(self, ws: Any, result: PipelineResult) -> None:
+        headers = ["ردیف", "کد حساب", "نام حساب", "تاریخ شمسی", "شماره سند", "شرح",
+                   "بدهکار", "بستانکار", "مانده جاری", "مرجع", "وضعیت"]
+        ws.append(headers)
+        lines = sorted(result.lines, key=lambda line: (
+            line.account_code or "~", line.gregorian_date, line.document_number, line.source_row
+        ))
+        balances: dict[str, Decimal] = {}
+        for index, line in enumerate(lines, 1):
+            code = line.account_code or "نامشخص"
+            balances[code] = balances.get(code, Decimal("0")) + line.debit - line.credit
+            ws.append([index, code, line.account_name or "حساب تعیین‌نشده", line.jalali_date,
+                       line.document_number, line.description, float(line.debit), float(line.credit),
+                       float(balances[code]), line.reference, line.status.value])
+        self._style_header(ws, 1, len(headers)); ws.freeze_panes = "A2"; ws.auto_filter.ref = ws.dimensions
+        for row in range(2, ws.max_row + 1):
+            for column in (7, 8, 9): ws.cell(row, column).number_format = self.MONEY_FORMAT
+        if ws.max_row > 1:
+            table = Table(displayName="AccountLedgerTable", ref=f"A1:K{ws.max_row}")
+            table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium2", showRowStripes=True)
+            ws.add_table(table)
+
+    def _monthly_analysis(self, ws: Any, result: PipelineResult) -> None:
+        headers = ["ماه شمسی", "تعداد اسناد", "تعداد ردیف", "گردش بدهکار", "گردش بستانکار",
+                   "اختلاف", "موارد نیازمند بررسی"]
+        ws.append(headers)
+        months: dict[str, dict[str, Any]] = {}
+        for document in result.documents:
+            month = document.jalali_date[:7]
+            item = months.setdefault(month, {"documents": set(), "lines": 0, "debit": Decimal("0"),
+                                             "credit": Decimal("0"), "review": 0})
+            item["documents"].add(document.number)
+            for line in document.lines:
+                item["lines"] += 1; item["debit"] += line.debit; item["credit"] += line.credit
+                item["review"] += line.status != ReviewStatus.RESOLVED
+        for month, item in sorted(months.items()):
+            ws.append([month, len(item["documents"]), item["lines"], float(item["debit"]),
+                       float(item["credit"]), float(item["debit"]-item["credit"]), item["review"]])
+        self._style_header(ws, 1, len(headers)); ws.freeze_panes = "A2"
+        for row in range(2, ws.max_row + 1):
+            for column in (4, 5, 6): ws.cell(row, column).number_format = self.MONEY_FORMAT
+        if ws.max_row > 1:
+            chart = BarChart(); chart.title = "روند گردش ماهانه"; chart.height = 7; chart.width = 14
+            chart.add_data(Reference(ws, min_col=4, max_col=5, min_row=1, max_row=ws.max_row), titles_from_data=True)
+            chart.set_categories(Reference(ws, min_col=1, min_row=2, max_row=ws.max_row)); ws.add_chart(chart, "I2")
+
+    def _review_queue(self, ws: Any, result: PipelineResult) -> None:
+        headers = ["ردیف", "وضعیت", "شماره سند", "تاریخ", "شرح", "بدهکار", "بستانکار",
+                   "کد پیشنهادی", "حساب پیشنهادی", "اطمینان", "دلیل بررسی"]
+        ws.append(headers)
+        pending = [line for line in result.lines if line.status != ReviewStatus.RESOLVED]
+        for index, line in enumerate(pending, 1):
+            ws.append([index, line.status.value, line.document_number, line.jalali_date, line.description,
+                       float(line.debit), float(line.credit), line.account_code, line.account_name,
+                       line.confidence, line.review_note])
+        if not pending: ws.append([None, "resolved", None, None, "مورد بازی برای رسیدگی وجود ندارد"])
+        self._style_header(ws, 1, len(headers)); ws.freeze_panes = "A2"; ws.auto_filter.ref = ws.dimensions
+        for row in range(2, ws.max_row + 1):
+            ws.cell(row, 6).number_format = self.MONEY_FORMAT; ws.cell(row, 7).number_format = self.MONEY_FORMAT
+            ws.cell(row, 10).number_format = "0%"
 
     def _documents(self, ws: Any, result: PipelineResult) -> None:
         headers = ["شماره سند", "تاریخ شمسی", "تعداد ردیف", "جمع بدهکار", "جمع بستانکار", "اختلاف", "وضعیت تراز"]
