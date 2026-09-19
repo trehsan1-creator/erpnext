@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+output/*.xlsx
+output/*.json
+ai_tasks/pending/*
+ai_tasks/completed/*
+ai_tasks/rejected/*
+!ai_tasks/*/.gitkeep
+logs/*.jsonl
