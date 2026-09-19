@@ -20,3 +20,5 @@ ui/runtime/reports/*
 !ui/runtime/uploads/.gitkeep
 !ui/runtime/reports/.gitkeep
 ui-runtime/
+recovery_tasks/pending/*
+recovery_tasks/completed/*

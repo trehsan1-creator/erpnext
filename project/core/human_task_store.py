@@ -81,6 +81,18 @@ class HumanTaskStore:
             created.append(task)
         return created
 
+    def create_custom(self, task: HumanTask) -> HumanTask:
+        """Add a validated human request produced by the universal recovery engine."""
+        if self._exists(task.task_id):
+            existing = self.pending_dir / f"{task.task_id}.json"
+            if existing.exists():
+                return HumanTask.model_validate_json(existing.read_text(encoding="utf-8"))
+            resolved = self.resolved_dir / f"{task.task_id}.json"
+            return HumanTask.model_validate_json(resolved.read_text(encoding="utf-8"))
+        self._save(task, self.pending_dir)
+        self._audit("human_task_created", task.model_dump(mode="json"))
+        return task
+
     def apply_resolutions(self, result: PipelineResult) -> None:
         line_map = {line.line_id: line for line in result.lines}
         for path in self.resolved_dir.glob("*.json"):

@@ -17,6 +17,7 @@ from pydantic import BaseModel
 
 from ai_bridge.client import OfflineAIBridge
 from ai_bridge.parser_learning import ParserLearningBridge
+from ai_bridge.recovery_engine import RecoveryEngine
 from core.decision_memory import DecisionMemory
 from core.human_task_store import HumanTaskStore
 from core.models import PipelineResult, ReviewStatus
@@ -66,6 +67,7 @@ profile_store = ParserProfileStore(DATA_ROOT)
 parser_learning = ParserLearningBridge(ROOT, DATA_ROOT)
 human_tasks = HumanTaskStore(DATA_ROOT)
 decision_memory = DecisionMemory(DATA_ROOT)
+recovery_engine = RecoveryEngine(ROOT, DATA_ROOT, human_tasks)
 
 
 class AIAnswer(BaseModel):
@@ -94,6 +96,7 @@ def _serialize(result: PipelineResult) -> dict[str, Any]:
         "human_tasks": [task.model_dump(mode="json") for task in human_tasks.pending()],
         "human_task_stats": human_tasks.stats(),
         "learning_stats": decision_memory.stats(),
+        "recovery_tasks": [task.model_dump(mode="json") for task in recovery_engine.pending_tasks()],
         "tasks": [
             {
                 "task_id": f"TX-{line.line_id}",
@@ -152,6 +155,34 @@ def _ensure_state() -> PipelineResult:
     return state["result"]
 
 
+def _resume_or_recover(path: Path, display_name: str | None = None) -> dict[str, Any]:
+    """Never let a resume action end in an opaque 500 error."""
+    try:
+        return _process(path, display_name)
+    except UnsupportedFormatError as exc:
+        task = parser_learning.create_task(path, exc.reason)
+        state.update(input=path, display_name=display_name or path.name, parser_task=task)
+        return {
+            "needs_parser": True,
+            "message": "برای ادامه، قالب فایل باید به آقا آموزش داده شود.",
+            "parser_task": task,
+            "parser_profiles": profile_store.summary(),
+        }
+    except Exception as exc:
+        blocker = recovery_engine.capture(
+            source_stage="unknown", operation="resume_interrupted_operation",
+            error_code=type(exc).__name__, title="ادامه عملیات متوقف شد", message=str(exc),
+            context={"file_name": display_name or path.name, "file_type": path.suffix.lower()},
+            safe_capabilities=["request_human", "propose_safe_configuration", "explain_manual_action"],
+            source_file=display_name or path.name,
+        )
+        return {
+            "needs_recovery": True,
+            "message": "ادامه عملیات به مانع رسید و مأموریت بازیابی ساخته شد.",
+            "recovery_task": blocker.model_dump(mode="json"),
+        }
+
+
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "service": "agha-accounting"}
@@ -191,8 +222,46 @@ def process_file(file: UploadFile = File(...)) -> dict[str, Any]:
                 "parser_profiles": profile_store.summary(),
             }
         except Exception as exc:
-            destination.unlink(missing_ok=True)
-            raise HTTPException(422, f"پردازش فایل ممکن نشد: {exc}") from exc
+            blocker = recovery_engine.capture(
+                source_stage="unknown", operation="process_uploaded_accounting_file",
+                error_code=type(exc).__name__, title="پردازش فایل متوقف شد",
+                message=str(exc),
+                context={"file_name": file.filename or destination.name, "file_type": suffix},
+                safe_capabilities=["request_human", "propose_safe_configuration", "explain_manual_action"],
+                source_file=file.filename or destination.name,
+            )
+            state.update(input=destination, display_name=file.filename or destination.name)
+            return {
+                "needs_recovery": True,
+                "message": "آقا به مانعی ناشناخته رسید و مأموریت بازیابی ساخت.",
+                "recovery_task": blocker.model_dump(mode="json"),
+            }
+
+
+@app.get("/api/recovery-tasks/{task_id}/prompt")
+def download_recovery_prompt(task_id: str) -> FileResponse:
+    if not task_id.startswith("RECOVERY-") or not task_id.replace("RECOVERY-", "").isalnum():
+        raise HTTPException(400, "شناسه مأموریت بازیابی نامعتبر است")
+    path = recovery_engine.prompt_path(task_id)
+    if not path.exists():
+        raise HTTPException(404, "پرامپت بازیابی پیدا نشد")
+    return FileResponse(path, filename=f"{task_id}.prompt.md", media_type="text/markdown; charset=utf-8")
+
+
+@app.post("/api/recovery-tasks/{task_id}/answer")
+def submit_recovery_answer(task_id: str, payload: AIAnswer) -> dict[str, Any]:
+    if not task_id.startswith("RECOVERY-") or not task_id.replace("RECOVERY-", "").isalnum():
+        raise HTTPException(400, "شناسه مأموریت بازیابی نامعتبر است")
+    with lock:
+        try:
+            _, human_task = recovery_engine.accept_response(task_id, payload.answer)
+            result = _ensure_state()
+            data = _serialize(result)
+            data["recovery_accepted"] = True
+            data["created_human_task"] = human_task.task_id if human_task else None
+            return data
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
 
 
 @app.get("/api/parser-profiles")
@@ -243,9 +312,39 @@ def resolve_human_task(task_id: str, payload: AIAnswer) -> dict[str, Any]:
             source = state.get("input")
             if not isinstance(source, Path) or not source.exists():
                 raise HTTPException(409, "فایل منبع برای ادامه عملیات در دسترس نیست")
-            return _process(source, state.get("display_name"))
+            return _resume_or_recover(source, state.get("display_name"))
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
+
+
+@app.post("/api/reports/{report_id}/activation-task")
+def create_report_activation_task(report_id: str) -> dict[str, Any]:
+    reports: dict[str, dict[str, Any]] = {
+        "profit-loss": {
+            "title": "فعال‌سازی گزارش سود و زیان",
+            "requirements": ["ماهیت و گروه حساب‌ها", "دوره مالی", "مانده افتتاحیه"],
+        },
+        "balance-sheet": {
+            "title": "فعال‌سازی ترازنامه",
+            "requirements": ["طبقه‌بندی دارایی/بدهی/حقوق مالکانه", "مانده افتتاحیه", "تاریخ گزارش"],
+        },
+        "cashflow": {
+            "title": "فعال‌سازی نقدینگی و مطالبات",
+            "requirements": ["حساب‌های بانک و صندوق", "طرف حساب", "سررسید", "نوع فعالیت جریان نقد"],
+        },
+    }
+    config = reports.get(report_id)
+    if not config:
+        raise HTTPException(404, "گزارش درخواستی شناخته‌شده نیست")
+    blocker = recovery_engine.capture(
+        source_stage="reporting", operation=f"activate_report:{report_id}",
+        error_code="MISSING_REPORT_PREREQUISITES", title=config["title"],
+        message="پیش‌نیازهای داده‌ای گزارش کامل نیست و تولید گزارش قابل اتکا ممکن نیست.",
+        context={"report_id": report_id, "required_data": config["requirements"]},
+        safe_capabilities=["request_human", "propose_safe_configuration", "propose_account_mapping"],
+        source_file=state.get("display_name"),
+    )
+    return {"needs_recovery": True, "recovery_task": blocker.model_dump(mode="json")}
 
 
 @app.get("/api/report")
@@ -276,5 +375,5 @@ def submit_answer(task_id: str, payload: AIAnswer) -> dict[str, Any]:
     response_path.write_text(json.dumps(payload.answer, ensure_ascii=False, indent=2), encoding="utf-8")
     with lock:
         input_path: Path = state.get("input") or ROOT / "examples" / "sample_input.xlsx"
-        data = _process(input_path, state.get("display_name"))
+        data = _resume_or_recover(input_path, state.get("display_name"))
     return data
