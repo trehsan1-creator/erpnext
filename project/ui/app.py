@@ -165,6 +165,29 @@ def _ensure_state() -> PipelineResult:
     return empty
 
 
+def _clear_operational_data() -> None:
+    """Remove all mutable runtime records while preserving source-controlled placeholders."""
+    for name in ("ai_tasks", "parser_tasks", "parser_profiles", "human_tasks", "learning",
+                 "recovery_tasks", "logs", "ui-runtime"):
+        folder = DATA_ROOT / name
+        if not folder.exists():
+            continue
+        for child in folder.iterdir():
+            if child.name == ".gitkeep":
+                continue
+            if child.is_dir():
+                shutil.rmtree(child, ignore_errors=True)
+            else:
+                child.unlink(missing_ok=True)
+    for directory in (
+        human_tasks.pending_dir, human_tasks.resolved_dir, human_tasks.audit_path.parent,
+        recovery_engine.pending, recovery_engine.completed, recovery_engine.audit_path.parent,
+        parser_learning.pending, parser_learning.completed, parser_learning.audit_path.parent,
+        decision_memory.path.parent, profile_store.directory, UPLOADS, REPORTS,
+    ):
+        directory.mkdir(parents=True, exist_ok=True)
+
+
 def _resume_or_recover(path: Path, display_name: str | None = None) -> dict[str, Any]:
     """Never let a resume action end in an opaque 500 error."""
     try:
@@ -255,6 +278,7 @@ def status() -> dict[str, Any]:
 def initialize_system(payload: CompanySetupRequest) -> dict[str, Any]:
     with lock:
         try:
+            _clear_operational_data()
             profile = setup_store.initialize(payload)
             state.update(result=None, input=None, report=None, display_name=None,
                          active_profile=None, parser_task=None)
@@ -280,26 +304,7 @@ def reset_system(payload: ResetRequest) -> dict[str, bool]:
         raise HTTPException(400, "عبارت تأیید بازنشانی صحیح نیست")
     with lock:
         setup_store.reset()
-        for name in ("ai_tasks", "parser_tasks", "parser_profiles", "human_tasks", "learning",
-                     "recovery_tasks", "logs", "ui-runtime"):
-            folder = DATA_ROOT / name
-            if not folder.exists():
-                continue
-            for child in folder.iterdir():
-                if child.name == ".gitkeep":
-                    continue
-                if child.is_dir():
-                    shutil.rmtree(child, ignore_errors=True)
-                else:
-                    child.unlink(missing_ok=True)
-        # Recreate directories expected by long-lived store instances.
-        for directory in (
-            human_tasks.pending_dir, human_tasks.resolved_dir, human_tasks.audit_path.parent,
-            recovery_engine.pending, recovery_engine.completed, recovery_engine.audit_path.parent,
-            parser_learning.pending, parser_learning.completed, parser_learning.audit_path.parent,
-            decision_memory.path.parent, profile_store.directory, UPLOADS, REPORTS,
-        ):
-            directory.mkdir(parents=True, exist_ok=True)
+        _clear_operational_data()
         state.update(result=None, input=None, report=None, display_name=None,
                      active_profile=None, parser_task=None)
     return {"reset": True}
