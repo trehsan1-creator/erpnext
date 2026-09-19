@@ -54,7 +54,7 @@
     <section class="parser-learning hidden" id="parserLearning">
       <div class="learning-visual"><div class="learn-core">⌘</div><span></span><span></span></div>
       <div class="learning-copy"><span class="badge">قالب جدید کشف شد</span><h3>آقا این زبان فایل را هنوز بلد نیست.</h3><p id="parserReason">برای این ساختار یک مأموریت امن ساخته شد. پرامپت را به AI بده و کانفیگ JSON را برگردان؛ از دفعات بعد آقا خودش این قالب را می‌شناسد.</p><small>کانفیگ فقط نگاشت داده است و اجازه اجرای کد ندارد.</small></div>
-      <div class="learning-actions"><a id="parserPrompt" class="small-btn" href="#">دریافت پرامپت آموزش</a><label class="small-btn accent upload-config">آپلود کانفیگ JSON<input id="parserConfigInput" type="file" accept=".json"></label></div>
+      <div class="learning-actions"><button id="parserPrompt" class="small-btn" type="button">مشاهده پرامپت آموزش</button><label class="small-btn accent upload-config">آپلود کانفیگ JSON<input id="parserConfigInput" type="file" accept=".json"></label></div>
     </section>
 
     <section class="panel wide profile-strip"><div><span>حافظه Parser آقا</span><strong><b id="profileCount">۰</b> قالب یادگرفته‌شده</strong></div><div id="activeProfile">Parser استاندارد آقا</div></section>
@@ -72,6 +72,7 @@
   </main>
 
   <dialog id="answerDialog"><form method="dialog"><button class="dialog-close">×</button><span class="badge">ورود پاسخ مأموریت</span><h3 id="dialogTitle">پاسخ JSON</h3><p>خروجی خام هوش مصنوعی را بدون Markdown اینجا بچسبان.</p><textarea id="answerJson" spellcheck="false" placeholder='{"task_id": "TX-...", ...}'></textarea><div class="dialog-actions"><button value="cancel" class="ghost">انصراف</button><button type="button" id="submitAnswer" class="primary">اعتبارسنجی و ادامه عملیات</button></div></form></dialog>
+  <dialog id="promptDialog" class="prompt-dialog"><form method="dialog"><button class="dialog-close">×</button><span class="badge">پرامپت آماده ارسال</span><h3 id="promptTitle">پرامپت مأموریت</h3><p>کل متن زیر را کپی کن و به Claude، ChatGPT یا مدل دلخواهت بده.</p><textarea id="promptText" class="prompt-text" readonly spellcheck="false"></textarea><div class="prompt-meta"><span>فقط متن نمایش‌داده‌شده کپی می‌شود</span><b id="promptChars">۰ کاراکتر</b></div><div class="dialog-actions"><button value="cancel" class="ghost">بستن</button><button type="button" id="copyPrompt" class="primary copy-prompt"><span>□</span> کپی کامل پرامپت</button></div></form></dialog>
   <div id="loader" class="loader hidden"><div class="loader-core">آ</div><div class="loader-ring"></div><strong>آقا مشغول حساب‌وکتاب است…</strong><small id="loaderText">در حال خواندن ساختار فایل</small></div>
   <script src="/static/app.js"></script>
 </body>
