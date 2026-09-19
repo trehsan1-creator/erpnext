@@ -13,11 +13,12 @@ from core.schema_ai import AI_RESPONSE_SCHEMAS, AmbiguousTransactionResponse
 class OfflineAIBridge:
     """Creates portable prompt files and consumes JSON answers; performs no network I/O."""
 
-    def __init__(self, root: Path, accounts: dict[str, tuple[str, str]]) -> None:
+    def __init__(self, root: Path, accounts: dict[str, tuple[str, str]], data_root: Path | None = None) -> None:
         self.root = root
+        self.data_root = data_root or root
         self.prompts_dir = root / "ai_bridge" / "prompts"
-        self.tasks_dir = root / "ai_tasks"
-        self.audit_path = root / "logs" / "ai_audit.jsonl"
+        self.tasks_dir = self.data_root / "ai_tasks"
+        self.audit_path = self.data_root / "logs" / "ai_audit.jsonl"
         self.accounts = accounts
         for name in ("pending", "completed", "rejected"):
             (self.tasks_dir / name).mkdir(parents=True, exist_ok=True)

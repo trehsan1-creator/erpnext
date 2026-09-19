@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: agha-accounting
+    runtime: python
+    plan: free
+    rootDir: project
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn ui.app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
+      - key: AGHA_DATA_DIR
+        value: /tmp/agha-data
+      - key: AGHA_USERNAME
+        value: agha
+      - key: AGHA_PASSWORD
+        sync: false
