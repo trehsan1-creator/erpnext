@@ -71,11 +71,18 @@ uvicorn ui.app:app --host 0.0.0.0 --port 8000
 1. در Render گزینه **New → Blueprint** را انتخاب کنید.
 2. مخزن `trehsan1-creator/erpnext` را متصل کنید.
 3. شاخه `arena/01a0b9a6-erpnext` را انتخاب کنید.
-4. Render فایل `render.yaml` را تشخیص می‌دهد و `rootDir` را روی `project` می‌گذارد.
+4. Render فایل `render.yaml` را تشخیص می‌دهد و اسکریپت‌های ریشه مخزن را اجرا می‌کند.
 5. هنگام ساخت Blueprint برای متغیر محرمانه `AGHA_PASSWORD` یک رمز قوی وارد کنید.
 6. پس از Deploy، مرورگر نام کاربری `agha` و همان رمز را درخواست می‌کند.
 
-دستور اجرای سرویس از قبل تنظیم شده است:
+اگر Web Service را دستی ساخته‌اید، تنظیمات زیر را دقیقاً وارد کنید و `poetry install` را حذف کنید:
+
+```text
+Build Command: ./render-build.sh
+Start Command: ./render-start.sh
+```
+
+اسکریپت Build وابستگی‌ها را از `project/requirements.txt` نصب می‌کند و اسکریپت Start فرمان Gunicorn زیر را از پوشه صحیح اجرا می‌کند:
 
 ```bash
 gunicorn ui.app:app --worker-class uvicorn_worker.UvicornWorker --workers 1 --bind 0.0.0.0:$PORT --timeout 180 --access-logfile - --error-logfile -

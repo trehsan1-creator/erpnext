@@ -3,9 +3,8 @@ services:
     name: agha-accounting
     runtime: python
     plan: free
-    rootDir: project
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
-    startCommand: gunicorn ui.app:app --worker-class uvicorn_worker.UvicornWorker --workers 1 --bind 0.0.0.0:$PORT --timeout 180 --access-logfile - --error-logfile -
+    buildCommand: ./render-build.sh
+    startCommand: ./render-start.sh
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
