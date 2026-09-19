@@ -78,8 +78,10 @@ uvicorn ui.app:app --host 0.0.0.0 --port 8000
 دستور اجرای سرویس از قبل تنظیم شده است:
 
 ```bash
-uvicorn ui.app:app --host 0.0.0.0 --port $PORT
+gunicorn ui.app:app --worker-class uvicorn_worker.UvicornWorker --workers 1 --bind 0.0.0.0:$PORT --timeout 180 --access-logfile - --error-logfile -
 ```
+
+این پروژه FastAPI/ASGI است؛ بنابراین `gunicorn your_application.wsgi` برای آن صحیح نیست. Gunicorn با `uvicorn_worker.UvicornWorker` اجرا می‌شود.
 
 Health check روی `/api/health` قرار دارد. پلن رایگان Render فایل‌های runtime را پس از restart یا redeploy نگه نمی‌دارد؛ برای نسخه آزمایشی مناسب است. برای نگهداری دائمی آپلودها، مأموریت‌ها و audit log یک Persistent Disk با mount path برابر `/var/data` اضافه و مقدار `AGHA_DATA_DIR` را به `/var/data/agha` تغییر دهید. Persistent Disk ممکن است نیازمند پلن پولی باشد.
 
