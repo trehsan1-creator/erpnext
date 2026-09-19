@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>آقا — عامل حسابداری</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <div class="noise"></div><div class="orb orb-one"></div><div class="orb orb-two"></div>
+  <div id="toast" class="toast"></div>
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">آ</div><div><strong>آقا</strong><span>عامل حسابداری</span></div></div>
+    <nav>
+      <button class="nav active"><i>◈</i><span>اتاق فرمان</span></button>
+      <button class="nav" data-scroll="ledger"><i>⌁</i><span>دفتر عملیات</span></button>
+      <button class="nav" data-scroll="missions"><i>✦</i><span>مأموریت‌های هوشمند</span><b id="navPending">۰</b></button>
+      <button class="nav" data-scroll="warnings"><i>△</i><span>کنترل و هشدار</span></button>
+    </nav>
+    <div class="privacy"><span class="pulse"></span><div><b>حالت آفلاین امن</b><small>هیچ داده‌ای خودکار خارج نمی‌شود</small></div></div>
+    <div class="version">AĞA / CORE 0.1</div>
+  </aside>
+
+  <main>
+    <header>
+      <div><p class="eyebrow">ACCOUNTING INTELLIGENCE / 01</p><h1>سلام، من <em>آقا</em> هستم.</h1><p class="subtitle">فایل را بده؛ حساب‌وکتاب، کنترل و مأموریت‌های مبهم با من.</p></div>
+      <div class="header-actions"><div class="system-state"><span></span> هسته آماده است</div><a class="icon-btn" href="/api/report" title="دانلود گزارش">↓</a></div>
+    </header>
+
+    <section class="command-deck">
+      <div class="command-copy"><span class="badge">شروع عملیات</span><h2>دفتر خام را به یک گزارش<br><mark>تمیز و قابل دفاع</mark> تبدیل کن.</h2><p>اکسل یا CSV را اینجا رها کن. آقا ساختار را می‌خواند، ردیف‌ها را کنترل می‌کند و جاهایی که نباید حدس زد متوقف می‌شود.</p>
+        <div class="agent-steps"><span class="done">خواندن</span><i></i><span class="done">نرمال‌سازی</span><i></i><span>کنترل</span><i></i><span>گزارش</span></div>
+      </div>
+      <label class="drop-zone" id="dropZone"><input id="fileInput" type="file" accept=".xlsx,.xls,.csv"><div class="drop-symbol"><span>＋</span></div><strong>فایل حسابداری را بینداز اینجا</strong><small>یا برای انتخاب کلیک کن — XLSX / CSV</small><div class="local-chip">⌾ پردازش ۱۰۰٪ محلی</div></label>
+    </section>
+
+    <section class="stats">
+      <article><div class="stat-icon blue">▤</div><div><span>اسناد پردازش‌شده</span><strong id="documents">—</strong><small id="source">نمونه آزمایشی</small></div></article>
+      <article><div class="stat-icon green">✓</div><div><span>ردیف‌های قطعی</span><strong id="resolved">—</strong><small>بدون نیاز به دخالت</small></div></article>
+      <article><div class="stat-icon amber">✦</div><div><span>مأموریت باز</span><strong id="pending">—</strong><small>منتظر پاسخ بیرونی</small></div></article>
+      <article><div class="stat-icon rose">△</div><div><span>هشدار کنترلی</span><strong id="warningCount">—</strong><small>برای بازبینی حسابدار</small></div></article>
+    </section>
+
+    <section class="grid-two">
+      <article class="panel financial"><div class="panel-head"><div><span class="section-number">۰۱</span><h3>نبض مالی</h3></div><span class="live"><i></i> محاسبه واقعی</span></div>
+        <div class="balance-wrap"><div class="balance-orbit"><div><small>اختلاف تراز</small><strong id="balance">۰</strong><span>ریال</span></div></div>
+          <div class="money-lines"><div><span><i class="in"></i>جمع بدهکار</span><b id="debit">—</b></div><div><span><i class="out"></i>جمع بستانکار</span><b id="credit">—</b></div><div class="balance-status"><span>وضعیت دفتر</span><b id="balanceStatus">در حال تحلیل</b></div></div>
+        </div>
+      </article>
+      <article class="panel agent-log"><div class="panel-head"><div><span class="section-number">۰۲</span><h3>ردپای عامل</h3></div><span class="terminal-dot">● ● ●</span></div>
+        <div class="terminal" id="agentLog"><p><time>اکنون</time><span class="ok">✓</span>هسته حسابداری آماده دریافت داده است.</p></div>
+      </article>
+    </section>
+
+    <section class="panel wide" id="missions"><div class="panel-head"><div><span class="section-number">۰۳</span><h3>مأموریت‌های هوشمند</h3><p>آقا اینجا حدس نمی‌زند؛ یک پرونده دقیق برای هوش مصنوعی بیرونی می‌سازد.</p></div><span class="count-pill"><b id="missionCount">۰</b> مأموریت باز</span></div>
+      <div id="taskList" class="task-list"><div class="empty">فعلاً مأموریتی باز نیست.</div></div>
+    </section>
+
+    <section class="panel wide" id="ledger"><div class="panel-head"><div><span class="section-number">۰۴</span><h3>آخرین عملیات دفتر</h3></div><a href="/api/report" class="text-link">دریافت خروجی حرفه‌ای Excel ←</a></div>
+      <div class="table-wrap"><table><thead><tr><th>سند</th><th>تاریخ</th><th>شرح</th><th>حساب تشخیص‌داده‌شده</th><th>بدهکار</th><th>بستانکار</th><th>وضعیت</th></tr></thead><tbody id="ledgerRows"></tbody></table></div>
+    </section>
+
+    <section class="panel wide" id="warnings"><div class="panel-head"><div><span class="section-number">۰۵</span><h3>کنترل و هشدار</h3></div></div><div id="warningList" class="warning-list"></div></section>
+    <footer><div class="brand-mini">آقا</div><p>ابزار تصمیم‌یار حسابداری؛ تصمیم نهایی با حسابدار مسئول است.</p><span>OFFLINE BY DESIGN</span></footer>
+  </main>
+
+  <dialog id="answerDialog"><form method="dialog"><button class="dialog-close">×</button><span class="badge">ورود پاسخ مأموریت</span><h3 id="dialogTitle">پاسخ JSON</h3><p>خروجی خام هوش مصنوعی را بدون Markdown اینجا بچسبان.</p><textarea id="answerJson" spellcheck="false" placeholder='{"task_id": "TX-...", ...}'></textarea><div class="dialog-actions"><button value="cancel" class="ghost">انصراف</button><button type="button" id="submitAnswer" class="primary">اعتبارسنجی و ادامه عملیات</button></div></form></dialog>
+  <div id="loader" class="loader hidden"><div class="loader-core">آ</div><div class="loader-ring"></div><strong>آقا مشغول حساب‌وکتاب است…</strong><small id="loaderText">در حال خواندن ساختار فایل</small></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

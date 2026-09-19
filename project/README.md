@@ -52,6 +52,16 @@ python run_example.py
 
 گزارش در `output/گزارش_حسابداری.xlsx` ایجاد می‌شود. در اولین اجرا، موارد مبهم در `ai_tasks/pending/` قرار می‌گیرند.
 
+## رابط وب «آقا»
+
+رابط RTL اتاق فرمان، بدون CDN یا وابستگی مرورگر به سرویس خارجی اجرا می‌شود:
+
+```bash
+uvicorn ui.app:app --host 0.0.0.0 --port 8000
+```
+
+سپس `http://localhost:8000` را باز کنید. از داخل رابط می‌توان فایل را با drag & drop بارگذاری کرد، تراز و هشدارها را دید، پرامپت هر مأموریت را دریافت کرد، پاسخ JSON را برگرداند و گزارش Excel نهایی را دانلود کرد. رابط و هسته هیچ فراخوانی آنلاین AI انجام نمی‌دهند.
+
 ## گردش کار آفلاین AI
 
 برای هر ابهام سه نام فایل مرتبط وجود دارد:
@@ -142,6 +152,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 python run_example.py
 pytest -q
+uvicorn ui.app:app --host 0.0.0.0 --port 8000
 ```
 
 For every unresolved transaction, send `ai_tasks/pending/*.prompt.md` to the AI provider of your choice. Save its raw JSON as the requested `.response.json` file and rerun the same command. Invalid answers produce up to two correction prompts; persistent failures are safely marked for human review instead of corrupting the ledger or stopping the run.

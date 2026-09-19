@@ -9,3 +9,7 @@ ai_tasks/completed/*
 ai_tasks/rejected/*
 !ai_tasks/*/.gitkeep
 logs/*.jsonl
+ui/runtime/uploads/*
+ui/runtime/reports/*
+!ui/runtime/uploads/.gitkeep
+!ui/runtime/reports/.gitkeep
